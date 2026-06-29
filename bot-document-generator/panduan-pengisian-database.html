@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panduan Pengisian Database Kode — Batik Wolter Document Bot</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b635a; --line:#e7e0d6; --bg:#faf7f2;
+    --card:#ffffff; --accent:#8a5a2b; --accent-soft:#f3e9dc;
+    --green:#2f6b46; --green-soft:#e6f1ea; --red:#9b2c2c; --red-soft:#f7e6e6;
+    --blue:#2b5d8a; --blue-soft:#e6eef5; --code:#3a3631;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:32px 22px 80px}
+  header.hero{
+    background:linear-gradient(135deg,#3a2c1c,#6b4a2a); color:#fff;
+    border-radius:18px; padding:34px 30px; margin-bottom:30px;
+  }
+  header.hero h1{margin:0 0 8px; font-size:27px; line-height:1.25}
+  header.hero p{margin:0; opacity:.9; font-size:15px}
+  .tag{display:inline-block; background:rgba(255,255,255,.16); border-radius:999px;
+    padding:3px 12px; font-size:12.5px; letter-spacing:.4px; margin-bottom:14px; text-transform:uppercase}
+  h2{font-size:21px; margin:38px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--line)}
+  h3{font-size:16.5px; margin:24px 0 8px}
+  p{margin:10px 0}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:16px 0}
+  .lead{font-size:17px; color:var(--muted)}
+  code{background:#f0ebe3; color:var(--code); padding:1px 6px; border-radius:5px;
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace; font-size:14px}
+  .callout{border-left:4px solid var(--accent); background:var(--accent-soft);
+    padding:14px 18px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.warn{border-color:var(--red); background:var(--red-soft)}
+  .callout.ok{border-color:var(--green); background:var(--green-soft)}
+  .callout.info{border-color:var(--blue); background:var(--blue-soft)}
+  .callout strong{display:block; margin-bottom:3px}
+  .scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:16px 0}
+  table{border-collapse:collapse; width:100%; font-size:14px; min-width:560px}
+  th,td{border:1px solid var(--line); padding:9px 11px; text-align:left; vertical-align:top}
+  th{background:var(--accent-soft); font-weight:600}
+  tbody tr:nth-child(even){background:#fcfaf6}
+  .anatomy{display:flex; flex-wrap:wrap; gap:10px; margin:18px 0; justify-content:center}
+  .seg{flex:1; min-width:120px; text-align:center; border:2px solid var(--line); border-radius:12px; padding:14px 10px; background:#fff}
+  .seg .big{font-size:30px; font-weight:700; letter-spacing:2px; font-family:monospace}
+  .seg .lbl{font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--accent); font-weight:700; margin-top:6px}
+  .seg .desc{font-size:12.5px; color:var(--muted); margin-top:4px}
+  .seg.p{border-color:#c9a87f} .seg.r{border-color:#9fb8cf} .seg.x{border-color:#a9c7b3}
+  ol.steps{counter-reset:step; list-style:none; padding:0; margin:16px 0}
+  ol.steps>li{position:relative; padding:4px 0 18px 46px; margin:0}
+  ol.steps>li::before{counter-increment:step; content:counter(step);
+    position:absolute; left:0; top:0; width:32px; height:32px; border-radius:50%;
+    background:var(--accent); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:15px}
+  ol.steps>li:not(:last-child)::after{content:""; position:absolute; left:15px; top:34px; bottom:4px; width:2px; background:var(--line)}
+  .pill{display:inline-block; padding:2px 9px; border-radius:6px; font-size:12.5px; font-weight:600; font-family:monospace}
+  .pill.true{background:var(--green-soft); color:var(--green)}
+  .pill.false{background:#eee8df; color:var(--muted)}
+  .toc{background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 22px; margin-bottom:20px}
+  .toc ol{margin:6px 0 0; padding-left:20px}
+  .toc a{color:var(--accent); text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  footer{margin-top:50px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13px}
+  .kv{font-family:monospace; font-size:13.5px}
+  pre.form{background:#2b2722; color:#f0ebe3; border-radius:12px; padding:16px 18px; overflow-x:auto;
+    font-family:"SFMono-Regular",Consolas,monospace; font-size:13.5px; line-height:1.6; margin:14px 0}
+  pre.form b{color:#e0b173; font-weight:600}
+  pre.form .opt{color:#9aa6a0}
+  .produces{background:var(--green-soft); border-left:4px solid var(--green);
+    padding:12px 16px 12px 18px; border-radius:0 10px 10px 0; margin:8px 0 26px; font-size:14px}
+  .produces ul{margin:6px 0 0; padding-left:20px}
+  .produces li{margin:3px 0}
+  .rule-h{display:flex; align-items:center; gap:9px; margin:26px 0 4px}
+  .rule-h .num{flex:none; width:26px; height:26px; border-radius:7px; background:var(--accent); color:#fff;
+    font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center}
+  .rule-h h3{margin:0}
+  .rule-h .kv{background:#f0ebe3; padding:1px 6px; border-radius:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="tag">Panduan Operator</span>
+    <h1>Cara Mengisi Database Kode Produk</h1>
+    <p>Referensi pengisian file <code style="background:rgba(255,255,255,.15);color:#fff">current-data.csv</code> yang dipakai bot untuk menerjemahkan kode &amp; nama barang menjadi deskripsi pada dokumen QUO / INV / RCP.</p>
+  </header>
+
+  <nav class="toc">
+    <strong>Daftar Isi</strong>
+    <ol>
+      <li><a href="#apa">Apa itu database ini?</a></li>
+      <li><a href="#anatomi">Anatomi sebuah kode produk</a></li>
+      <li><a href="#cara">Bagaimana bot membaca kode (urutan pencarian)</a></li>
+      <li><a href="#kolom">Arti setiap kolom</a></li>
+      <li><a href="#ruletype">Jenis baris (<span class="kv">rule_type</span>) &amp; contohnya</a></li>
+      <li><a href="#form">Contoh form yang diinput user</a></li>
+      <li><a href="#contoh">Contoh: menambah produk baru</a></li>
+      <li><a href="#aturan">Aturan emas &amp; kesalahan umum</a></li>
+    </ol>
+  </nav>
+
+  <section id="apa">
+    <h2>1. Apa itu database ini?</h2>
+    <p class="lead">File <code>current-data.csv</code> adalah salinan (mirror) dari tab <code>DATABASE</code> pada spreadsheet operasional — "kamus" yang dipakai bot untuk mengubah kode singkat menjadi tulisan lengkap di dokumen.</p>
+    <div class="callout ok">
+      <strong>Sumber data yang sebenarnya dibaca bot</strong>
+      Saat berjalan, bot membaca tab bernama <code>DATABASE</code> (kolom A–L) di spreadsheet <em>tiap company</em> (WBM, WBD, WBN, dst.), bukan file CSV ini. Data di-cache ±60 detik. Edit dilakukan di tab <code>DATABASE</code>; CSV ini hanya cermin untuk dibaca/diskusi.
+    </div>
+    <p>Ketika operator mengirim form lewat WhatsApp, baris pembelian ditulis seperti ini:</p>
+    <div class="card kv">2279K (V8172C) + 750K (TAILORING)</div>
+    <p>Bot perlu tahu bahwa <code>V8172C</code> artinya <strong>"Kain Katun Batik Tulis"</strong> dan <code>TAILORING</code> artinya <strong>"Layanan Bespoke Tailoring Kemeja"</strong>. Database inilah yang menyimpan terjemahan tersebut, sehingga di PDF tercetak rapi:</p>
+    <div class="card">Kain Katun Batik Tulis (V8172C) &nbsp;—&nbsp; Rp 2.279.000</div>
+    <div class="callout info">
+      <strong>Penting dipahami</strong>
+      <strong style="font-weight:400;display:inline">Harga TIDAK diambil dari database.</strong> Harga selalu diambil dari angka yang diketik operator (<code>2279K</code> → Rp 2.279.000). Kolom harga di CSV hanya katalog referensi.
+    </div>
+  </section>
+
+  <section id="anatomi">
+    <h2>2. Anatomi sebuah kode produk</h2>
+    <p>Kode kain dibaca oleh bot per bagian. Contoh untuk <code>V8172C</code>:</p>
+    <div class="anatomy">
+      <div class="seg p">
+        <div class="big">V</div>
+        <div class="lbl">Prefix</div>
+        <div class="desc">Huruf depan = jenis/kategori barang</div>
+      </div>
+      <div class="seg r">
+        <div class="big">8172</div>
+        <div class="lbl">Running</div>
+        <div class="desc">Nomor urut barang</div>
+      </div>
+      <div class="seg x">
+        <div class="big">C</div>
+        <div class="lbl">Suffix</div>
+        <div class="desc">Huruf terakhir = jenis kain</div>
+      </div>
+    </div>
+    <p>Untuk produk <strong>set</strong> (couple, sarimbit, sarong, tenun) prefix-nya 2 huruf, contoh <code>CP7158C</code> → prefix <code>CP</code> (Couple), suffix <code>C</code> (kain katun).</p>
+    <div class="callout">
+      <strong>Cara bot menemukan suffix</strong>
+      Suffix = huruf <em>terakhir</em> yang muncul <em>setelah</em> angka terakhir. Jadi pada <code>V8172C</code>, suffix-nya <code>C</code>. Kalau tidak ada huruf setelah angka, dianggap tidak ada suffix.
+    </div>
+  </section>
+
+  <section id="cara">
+    <h2>3. Bagaimana bot membaca kode (urutan pencarian)</h2>
+    <p>Saat menemukan sebuah kode, bot mencari deskripsi dengan urutan berikut (sesuai loader di program). Begitu ketemu, pencarian berhenti.</p>
+    <ol class="steps">
+      <li><strong>Kode penuh</strong> — seluruh kode persis ada di baris <code>exact_code</code>? (mis. <code>JL</code> → Jahit Luar)</li>
+      <li><strong>Kombinasi set + suffix</strong> — baris <code>structured_code</code> dengan <code>code_front</code> + <code>back_code</code> yang cocok. (mis. front <code>C</code> + suffix <code>C</code> → Kain Couple Katun Batik Tulis)</li>
+      <li><strong>Prefix + suffix</strong> — baris <code>prefix_suffix</code> (kunci <code>PREFIX|SUFFIX</code>, mis. <code>TN|P</code>).</li>
+      <li><strong>Prefix</strong> — baris <code>prefix_code</code> (mis. <code>BC</code> → Batik Cap).</li>
+      <li><strong>Huruf pertama prefix</strong> — baris <code>prefix_family</code> (fallback luas).</li>
+      <li><strong>Suffix</strong> — baris <code>suffix_code</code> (mis. <code>C</code> → Kain Katun Batik Tulis).</li>
+    </ol>
+    <div class="callout info">
+      <strong>Kalau semua gagal</strong>
+      Bot jatuh ke mapping bawaan program (fallback), lalu ke deskripsi dari baris <code>item_name</code>, lalu teks asli, terakhir kata "Item". Jadi tab <code>DATABASE</code> bersifat <em>fail-open</em>: kalau kosong/error, bot tetap jalan dengan mapping lama.
+    </div>
+    <div class="callout info">
+      <strong>Kalau barang ditulis sebagai NAMA, bukan kode</strong>
+      Operator boleh menulis <code>(TAILORING)</code> atau <code>(CUSTOM)</code> alih-alih kode. Bot mencocokkannya lewat baris <code>item_name</code>, lalu meng-generate kode dari <code>code_prefix</code> (+ nomor running 4 digit bila <code>needs_running=TRUE</code>, disimpan di counter <code>item_code_&lt;PREFIX&gt;</code>).
+    </div>
+  </section>
+
+  <section id="kolom">
+    <h2>4. Arti setiap kolom</h2>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Kolom</th><th>Arti</th><th>Contoh isi</th></tr></thead>
+      <tbody>
+        <tr><td class="kv">rule_type</td><td>Jenis baris — menentukan bagaimana baris dipakai (lihat bagian 5)</td><td><code>item_name</code></td></tr>
+        <tr><td class="kv">match_key</td><td>Kunci pencocokan: kode atau nama barang yang dicari</td><td><code>BATIK_CAP</code> / <code>JL</code></td></tr>
+        <tr><td class="kv">description_id</td><td>Tulisan yang muncul di dokumen versi <strong>Bahasa Indonesia</strong></td><td>Batik Cap</td></tr>
+        <tr><td class="kv">description_en</td><td>Tulisan untuk dokumen versi <strong>English</strong> (opsional)</td><td>Stamped Batik</td></tr>
+        <tr><td class="kv">code_front</td><td>Penanda set di depan kode: <code>C</code>=Couple, <code>F</code>=Sarong, <code>S</code>=Sarimbit, <code>T</code>=Tenun, kosong=satuan</td><td><code>C</code></td></tr>
+        <tr><td class="kv">price_code</td><td>Huruf posisi harga (katalog referensi)</td><td><code>P</code></td></tr>
+        <tr><td class="kv">back_code</td><td>Huruf suffix (jenis kain) yang sah untuk baris ini</td><td><code>C</code></td></tr>
+        <tr><td class="kv">code_prefix</td><td>Prefix yang dihasilkan bila barang ditulis sebagai nama</td><td><code>CP</code></td></tr>
+        <tr><td class="kv">code_suffix</td><td>Suffix yang dihasilkan bila barang ditulis sebagai nama</td><td><code>C</code></td></tr>
+        <tr><td class="kv">needs_running</td><td>Apakah barang ini butuh nomor urut? <span class="pill true">TRUE</span> untuk kain produksi, <span class="pill false">FALSE</span> untuk jasa/voucher</td><td>TRUE</td></tr>
+        <tr><td class="kv">price_amount_k</td><td>Nominal harga dalam ribuan (katalog referensi, mis. <code>2279</code> = Rp 2.279.000)</td><td>2279</td></tr>
+        <tr><td class="kv">notes</td><td>Catatan bebas untuk internal</td><td>amount in K</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section id="ruletype">
+    <h2>5. Jenis baris (<span class="kv">rule_type</span>) &amp; contohnya</h2>
+    <p>Setiap baris punya satu <code>rule_type</code> yang menentukan kolom wajib diisi. Ada dua alur: <strong>nama → kode</strong> (saat user tidak menulis kode) dan <strong>kode → deskripsi</strong> (saat membaca kode jadi tulisan PDF).</p>
+
+    <div class="rule-h"><span class="num">1</span><h3><span class="kv">item_name</span> — nama barang → kode otomatis</h3></div>
+    <p>Dipakai saat user menulis <em>nama</em> barang, bukan kode (mis. <code>(BATIK CAP)</code>). Bot mencari nama (sudah dinormalisasi: HURUF BESAR, spasi→<code>_</code>) lalu membuat kode dari <code>code_prefix</code> + <code>code_suffix</code>. Bila <code>needs_running=TRUE</code>, ditambah nomor urut 4 digit (mis. <code>0001</code>).</p>
+    <div class="scroll"><table>
+      <thead><tr><th>match_key</th><th>description_id</th><th>code_prefix</th><th>code_suffix</th><th>needs_running</th><th>→ kode dihasilkan</th></tr></thead>
+      <tbody>
+        <tr><td>JAHIT_LUAR</td><td>Jahit Luar</td><td>JL</td><td></td><td><span class="pill false">FALSE</span></td><td><code>JL</code> (jasa, tanpa urut)</td></tr>
+        <tr><td>BATIK_CAP</td><td>Batik Cap</td><td>BC</td><td></td><td><span class="pill true">TRUE</span></td><td><code>BC0001</code>, <code>BC0002</code>…</td></tr>
+        <tr><td>CUSTOM</td><td>Kain Custom</td><td>W</td><td></td><td><span class="pill true">TRUE</span></td><td><code>W0001</code></td></tr>
+        <tr><td>KAIN_KATUN_BATIK_TULIS</td><td>Kain Katun Batik Tulis</td><td>P</td><td>C</td><td><span class="pill true">TRUE</span></td><td><code>P0001C</code> (prefix + urut + suffix)</td></tr>
+        <tr><td>KAIN_COUPLE_SUTRA_BATIK_TULIS</td><td>Kain Couple Sutra Batik Tulis</td><td>CP</td><td>S</td><td><span class="pill true">TRUE</span></td><td><code>CP0001S</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="rule-h"><span class="num">2</span><h3><span class="kv">exact_code</span> — kode persis → deskripsi</h3></div>
+    <p>Kode lengkap dicocokkan apa adanya. Cocok untuk kode pendek/final yang tidak perlu analisa prefix/suffix. Wajib: <strong>match_key</strong> (kode) + <strong>description_id</strong>. Isi <strong>description_en</strong> bila perlu versi English.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>match_key</th><th>description_id</th><th>description_en</th></tr></thead>
+      <tbody>
+        <tr><td>JL</td><td>Jahit Luar</td><td></td></tr>
+        <tr><td>TN</td><td>Kain Tenun</td><td></td></tr>
+        <tr><td>TAILORING</td><td>Layanan Bespoke Tailoring Kemeja</td><td>Bespoke Shirt Tailoring Service</td></tr>
+        <tr><td>FEE EXPRESS</td><td>Fee Express</td><td>Express Fee</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="rule-h"><span class="num">3</span><h3><span class="kv">structured_code</span> — set + suffix → jenis kain</h3></div>
+    <p>Kombinasi <code>code_front</code> (penanda set, kosong = satuan) dan <code>back_code</code> (huruf suffix). Catatan penting: huruf di posisi prefix-terakhir adalah <em>kode harga</em> dan diabaikan; yang dipakai hanya front + suffix. Wajib: <strong>description_id</strong>, <strong>code_front</strong>, <strong>back_code</strong>.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>code_front</th><th>back_code</th><th>description_id</th><th>cocok dengan kode</th></tr></thead>
+      <tbody>
+        <tr><td><em>(kosong)</em></td><td>C</td><td>Kain Katun Batik Tulis</td><td><code>P8172C</code>, <code>V1234C</code></td></tr>
+        <tr><td><em>(kosong)</em></td><td>Z</td><td>Kain Sutra Batik Tulis Perada</td><td><code>S9001Z</code></td></tr>
+        <tr><td>C</td><td>S</td><td>Kain Couple Sutra Batik Tulis</td><td><code>CP7158S</code></td></tr>
+        <tr><td>F</td><td>B</td><td>Kain Sarong Katun Batik Tulis Perada</td><td><code>FP2201B</code></td></tr>
+        <tr><td>T</td><td>L</td><td>Kain Tenun Sutra</td><td><code>TQ042L</code>, <code>TN042L</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="rule-h"><span class="num">4</span><h3><span class="kv">prefix_suffix</span> — kombinasi prefix+suffix khusus</h3></div>
+    <p><span class="pill false">Belum dipakai di data sekarang</span> · didukung loader. Untuk memberi arti khusus pada kombinasi prefix &amp; suffix tertentu. Format <strong>match_key</strong>: <code>PREFIX|SUFFIX</code> (pakai <code>|</code>, bukan <code>-</code>/<code>/</code>).</p>
+    <div class="callout warn"><strong>Perhatikan prioritas</strong> Rule ini hanya menang atas <code>prefix_code</code> &amp; <code>suffix_code</code>, tetapi <em>kalah</em> dari <code>structured_code</code>. Jadi jika sudah ada baris <code>structured_code</code> untuk kombinasi itu (mis. front&nbsp;<code>T</code>&nbsp;+&nbsp;back&nbsp;<code>P</code>), baris itulah yang dipakai — bukan <code>prefix_suffix</code>.</div>
+    <div class="scroll"><table>
+      <thead><tr><th>match_key</th><th>description_id</th><th>kegunaan</th></tr></thead>
+      <tbody>
+        <tr><td>XY|P</td><td>Deskripsi Khusus XY-P</td><td>kode berprefix <code>XY</code> &amp; bersuffix <code>P</code> yang tidak punya aturan structured</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="rule-h"><span class="num">5</span><h3><span class="kv">prefix_code</span> — huruf depan → deskripsi</h3></div>
+    <p>Barang dikenali dari prefix-nya (huruf depan sebelum angka). Wajib: <strong>match_key</strong> (prefix) + <strong>description_id</strong>.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>match_key</th><th>description_id</th><th>cocok dengan kode</th></tr></thead>
+      <tbody>
+        <tr><td>BC</td><td>Batik Cap</td><td><code>BC0007</code></td></tr>
+        <tr><td>AL</td><td>Adjust Luar</td><td><code>AL12</code></td></tr>
+        <tr><td>BV</td><td>Benang Variasi</td><td><code>BV - 05</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="rule-h"><span class="num">6</span><h3><span class="kv">prefix_family</span> — huruf pertama prefix (fallback luas)</h3></div>
+    <p><span class="pill false">Belum dipakai di data sekarang</span> · didukung loader. Cadangan: bila prefix lengkap tidak ketemu, bot coba <em>huruf pertama</em>-nya. Gunakan hati-hati karena cakupannya luas.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>match_key</th><th>description_id</th><th>arti</th></tr></thead>
+      <tbody>
+        <tr><td>C</td><td>Kain Katun Batik Tulis</td><td>semua kode berawalan C tak dikenal → katun</td></tr>
+        <tr><td>S</td><td>Kain Sutra Batik Tulis</td><td>berawalan S → sutra</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="rule-h"><span class="num">7</span><h3><span class="kv">suffix_code</span> — huruf terakhir → deskripsi</h3></div>
+    <p><span class="pill false">Belum dipakai di data sekarang</span> · didukung loader. Alternatif sederhana dari <code>structured_code</code> bila arti barang hanya ditentukan huruf suffix (tanpa set). Wajib: <strong>match_key</strong> (suffix) + <strong>description_id</strong>.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>match_key</th><th>description_id</th></tr></thead>
+      <tbody>
+        <tr><td>C</td><td>Kain Katun Batik Tulis</td></tr>
+        <tr><td>U</td><td>Kain Katun Batik Tulis Perada</td></tr>
+        <tr><td>H</td><td>Kain Selendang Katun Batik Tulis <em>(suffix baru)</em></td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="rule-h"><span class="num">8</span><h3><span class="kv">price_code</span> — huruf harga → nominal (referensi)</h3></div>
+    <p>Tabel katalog harga per huruf. <strong>Tidak dipakai bot untuk menghitung harga</strong> (harga selalu dari pesan WhatsApp) — murni dokumentasi internal. Wajib: <strong>match_key</strong> (huruf) + <strong>price_amount_k</strong>.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>match_key</th><th>price_amount_k</th><th>nominal</th></tr></thead>
+      <tbody>
+        <tr><td>Y</td><td>2279</td><td>Rp 2.279.000</td></tr>
+        <tr><td>C</td><td>3179</td><td>Rp 3.179.000</td></tr>
+        <tr><td>O</td><td>4179</td><td>Rp 4.179.000</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="form">
+    <h2>6. Contoh form yang diinput user</h2>
+    <p>Operator mengirim form lewat WhatsApp. Field <code>NOTES</code>, <code>DP</code>, dan <code>REK</code> bersifat opsional. Pada baris pembelian: harga boleh pakai singkatan <code>K</code> (<code>2279K</code> = Rp 2.279.000), dan beberapa barang dipisah dengan tanda <code>+</code>.</p>
+
+    <h3>Contoh A — Invoice: kode kain + jasa (nama)</h3>
+    <pre class="form"><b>FORM REQUEST DOCUMENT</b>
+NAME: Ibu Sari
+CATEGORY: INV
+LANGUAGE: BAHASA
+COMPANY: WBM
+BRANCH: WEST
+DATE: 29 Juni 2026
+
+<b>PURCHASE DETAILS</b>
+2279K (V8172C) + 750K (TAILORING)
+TOTAL: 3029K
+<span class="opt">DP: 1000K</span>
+<span class="opt">REK BCA 1234567890 - Batik Wolter</span></pre>
+    <div class="produces"><strong>Hasil di PDF:</strong>
+      <ul>
+        <li>Kain Katun Batik Tulis (V8172C) — Rp 2.279.000 <em>(suffix C)</em></li>
+        <li>Layanan Bespoke Tailoring Kemeja — Rp 750.000 <em>(dikenali via item_name)</em></li>
+      </ul>
+      Total Rp 3.029.000 · DP Rp 1.000.000
+    </div>
+
+    <h3>Contoh B — Quotation: set couple + kain satuan + catatan</h3>
+    <pre class="form"><b>FORM REQUEST DOCUMENT</b>
+NAME: Bapak Hartono
+CATEGORY: QUO
+LANGUAGE: BAHASA
+COMPANY: WBN
+BRANCH: SOUTH
+DATE: 29 Juni 2026
+NOTES : Penawaran berlaku 14 hari.
+
+<b>PURCHASE DETAILS</b>
+3879K (CP7158S) + 3179K (P8201C)
+TOTAL: 7058K</pre>
+    <div class="produces"><strong>Hasil di PDF:</strong>
+      <ul>
+        <li>Kain Couple Sutra Batik Tulis (CP7158S) — Rp 3.879.000 <em>(front C + suffix S)</em></li>
+        <li>Kain Katun Batik Tulis (P8201C) — Rp 3.179.000</li>
+      </ul>
+    </div>
+
+    <h3>Contoh C — Semua barang ditulis sebagai nama (kode di-generate otomatis)</h3>
+    <pre class="form"><b>FORM REQUEST DOCUMENT</b>
+NAME: PT Maju Jaya
+CATEGORY: INV
+LANGUAGE: BAHASA
+COMPANY: WBD
+BRANCH: CENTER
+DATE: 29 Juni 2026
+
+<b>PURCHASE DETAILS</b>
+500K (BATIK CAP) + 350K (JAHIT LUAR)
+TOTAL: 850K
+<span class="opt">REK Mandiri 9988776655 - Batik Wolter</span></pre>
+    <div class="produces"><strong>Hasil di PDF:</strong>
+      <ul>
+        <li>Batik Cap (BC0001) — Rp 500.000 <em>(kode urut dibuat otomatis, needs_running TRUE)</em></li>
+        <li>Jahit Luar (JL) — Rp 350.000 <em>(tanpa nomor urut, needs_running FALSE)</em></li>
+      </ul>
+    </div>
+
+    <div class="callout info">
+      <strong>Tentang dokumen English</strong>
+      Jika <code>LANGUAGE: ENGLISH</code>, deskripsi diambil dari <code>description_en</code> — tetapi hanya untuk barang yang dicocokkan lewat <code>item_name</code>. Barang yang dikenali dari <em>kode</em> tetap memakai <code>description_id</code>.
+    </div>
+  </section>
+
+  <section id="contoh">
+    <h2>7. Contoh: menambah produk baru</h2>
+    <p>Misal ingin menambah <strong>"Kain Tenun Sutra"</strong> dengan prefix <code>TP</code> dan suffix <code>L</code>:</p>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>rule_type</th><th>match_key</th><th>description_id</th><th>code_front</th><th>back_code</th><th>code_prefix</th><th>code_suffix</th><th>needs_running</th></tr></thead>
+      <tbody>
+        <tr><td>item_name</td><td>KAIN_TENUN_SUTRA</td><td>Kain Tenun Sutra</td><td>T</td><td></td><td>TP</td><td>L</td><td>TRUE</td></tr>
+        <tr><td>structured_code</td><td></td><td>Kain Tenun Sutra</td><td>T</td><td>L</td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ol class="steps">
+      <li>Buka tab <code>DATABASE</code> di spreadsheet company yang relevan (bukan file CSV).</li>
+      <li>Tambah baris <code>item_name</code> agar operator bisa mengetik nama barang.</li>
+      <li>Tambah baris <code>structured_code</code> agar kode <code>TP…L</code> dikenali bot.</li>
+      <li>Tunggu ±60 detik (masa cache), lalu tes dengan 1 request kecil.</li>
+    </ol>
+    <div class="callout warn">
+      <strong>Perubahan langsung aktif — hati-hati</strong>
+      Karena bot membaca tab <code>DATABASE</code> secara langsung, baris yang salah bisa langsung memengaruhi dokumen. Jangan ubah baris header, jangan buat duplikat <code>(rule_type, match_key)</code> (yang pertama yang dipakai), dan kalau katalog dipakai banyak company, perbarui di semua spreadsheet company.
+    </div>
+  </section>
+
+  <section id="aturan">
+    <h2>8. Aturan emas &amp; kesalahan umum</h2>
+    <div class="callout ok">
+      <strong>✓ Lakukan</strong>
+      Tulis <code>match_key</code> dengan HURUF BESAR dan pakai <code>_</code> sebagai pengganti spasi (mis. <code>BATIK_CAP</code>). Konsisten dengan baris yang sudah ada.
+    </div>
+    <div class="callout ok">
+      <strong>✓ Lakukan</strong>
+      Isi <code>needs_running</code> = <code>TRUE</code> untuk kain yang diproduksi, <code>FALSE</code> untuk jasa, voucher, atau adjust.
+    </div>
+    <div class="callout warn">
+      <strong>✕ Hindari</strong>
+      Memakai huruf suffix yang sudah dipakai untuk arti lain tanpa konteks <code>code_front</code> — satu huruf bisa berarti beda tergantung set-nya.
+    </div>
+    <div class="callout warn">
+      <strong>✕ Hindari</strong>
+      Mengisi harga di kolom <code>price_amount_k</code> lalu berharap bot memakainya. Harga selalu dari pesan WhatsApp.
+    </div>
+  </section>
+
+  <footer>
+    Dokumen ini referensi untuk operator. Sumber data utama yang dibaca bot adalah tab <code>DATABASE</code> di spreadsheet company (loader: <code>store/sheets/item_catalog.go</code>); mapping di <code>domain/document/catalog.go</code> &amp; <code>item_codes.go</code> hanya cadangan (fallback) bila sheet kosong/error. Panduan teknis lengkap: <code>docs/database-sheet-item-catalog-guidelines.md</code>.
+  </footer>
+
+</div>
+</body>
+</html>
