@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Docs — Sesar Documentations</title>
+<title>Dekara Text Documentations</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b635a; --line:#e7e0d6; --bg:#faf7f2;
@@ -52,7 +52,7 @@
 <div class="wrap">
   <header class="hero">
     <div class="tag">Documentations</div>
-    <h1>Sesar Documentations</h1>
+    <h1>Dekara Text Documentations</h1>
     <p>Public documentation, technical references, and project guides.</p>
   </header>
 
@@ -158,7 +158,7 @@ async function fetchTree() {
 // ─── process tree into project list ───
 function processTree(tree) {
   return tree
-    .filter(item => item.type === 'blob' && item.path.endsWith('.html') && !item.path.startsWith('.'))
+    .filter(item => item.type === 'blob' && item.path.endsWith('.html') && !item.path.startsWith('.') && item.path.includes('/'))
     .map(item => ({
       path: item.path,
       name: item.path.split('/').pop(),
