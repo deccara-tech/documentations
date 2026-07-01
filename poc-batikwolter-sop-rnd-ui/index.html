@@ -207,6 +207,25 @@
   .upd .u small{color:var(--ink-faint)}
   .dodrow{display:flex;gap:9px;align-items:flex-start;padding:6px 0}
 
+  /* portfolio board */
+  .pboard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
+  .pcol{background:#faf9f7;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .pcol-h{display:flex;justify-content:space-between;align-items:center;margin:2px 4px 10px}
+  .pcol-h .cnt{color:var(--ink-faint);font-size:12px}
+  .pcard{background:#fff;border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:11px;margin-bottom:9px;cursor:pointer;box-shadow:var(--shadow)}
+  .pcard:hover{transform:translateY(-1px);border-color:#cfd6e4}
+  .pcard-t{font-weight:650;font-size:13.5px;margin-bottom:5px}
+  .pcard-m{font-size:11.5px;color:var(--ink-faint);margin-bottom:8px}
+  .pcard-f{display:flex;justify-content:space-between;align-items:center;margin-top:9px;font-size:11px;color:var(--ink-faint)}
+  .bl-blue{border-left-color:#2f6df6}.bl-teal{border-left-color:#0d9488}.bl-purple{border-left-color:#7c3aed}.bl-amber{border-left-color:#d97706}
+  .avs{display:flex}
+  .avs i{width:20px;height:20px;border-radius:50%;background:#e9e6df;color:var(--ink-soft);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;margin-left:-5px;font-style:normal}
+  .avs i:first-child{margin-left:0}
+
+  /* team capacity */
+  .uti{height:7px;background:#efece7;border-radius:5px;overflow:hidden;width:120px}
+  .uti>div{height:100%}
+
   /* toast */
   .toast-wrap{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:50}
   .toast{background:#20201d;color:#fff;border-radius:10px;padding:13px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:340px;animation:pop .25s}
@@ -807,6 +826,8 @@ const NAV=[
   {id:'onboard',ico:'🎓',label:'Onboarding',tag:'Staff'},
   {grp:'Manajemen Proyek'},
   {id:'project',ico:'📅',label:'Project Calendar'},
+  {id:'portfolio',ico:'📊',label:'Portfolio Board'},
+  {id:'capacity',ico:'👥',label:'Team Capacity'},
   {grp:'Operasi Harian'},
   {id:'routine',ico:'☑️',label:'Daily Routines'},
   {id:'test',ico:'📝',label:'Post-Test & Skor'},
@@ -873,6 +894,8 @@ function render(){
   else if(v==='division') html=state.flow?viewFlowDetail():viewDivision();
   else if(v==='onboard') html=viewOnboard();
   else if(v==='project') html=state.project?viewProjectDetail():viewProjectCalendar();
+  else if(v==='portfolio') html=state.project?viewProjectDetail():viewPortfolio();
+  else if(v==='capacity') html=state.project?viewProjectDetail():viewCapacity();
   else if(v==='routine') html=viewRoutine();
   else if(v==='test') html=viewTest();
   else if(v==='ai') html=viewAI();
@@ -1286,7 +1309,12 @@ const PROJECTS=[
    team:['Tono','Dewi'],owner:'Bu Sri — Head Operasional',sponsor:'Direktur Operasional',approver:'Head Operasional',
    division:'FLOW SUPPORT',relatedFlow:'Pemeliharaan Alat & Aset',sopCount:10,progress:0,
    dod:[{t:'Jadwal audit preventif per aset',done:false},{t:'Laporan pemeliharaan bulanan otomatis',done:false}],
-   updates:[{d:'Rencana Agustus',txt:'Antre setelah gelombang proyek Juli.'}]}
+   updates:[{d:'Rencana Agustus',txt:'Antre setelah gelombang proyek Juli.'}]},
+  {id:'P0',name:'Flow: Inquiry & Penawaran',color:'purple',start:'2026-06-16',end:'2026-06-30',status:'Selesai',
+   team:['Budi','Sari'],owner:'Andi — Head Sales',sponsor:'Direktur Operasional',approver:'Head Sales',
+   division:'FLOW ORDER',relatedFlow:'Inquiry & Penawaran',sopCount:10,progress:100,
+   dod:[{t:'10 SOP Inquiry tersusun & tersimpan',done:true},{t:'Post-test aktif per SOP',done:true},{t:'Tersambung ke Pemesanan Bespoke',done:true}],
+   updates:[{d:'30 Jun',txt:'Selesai & di-handoff. Flow live di Division Flow.'},{d:'16 Jun',txt:'Kickoff proyek penyusunan flow Inquiry.'}]}
 ];
 function visibleMembers(){ return state.persona==='staff'?MEMBERS.filter(m=>m.role===state.role):MEMBERS; }
 function projStatusPill(s){ return s==='Aktif'?pill('p-open','● Aktif'):s==='Selesai'?pill('p-support','✓ Selesai'):pill('p-ghost','○ Rencana'); }
@@ -1362,6 +1390,67 @@ function viewProjectDetail(){
    <div>${p.dod.map(x=>`<div class="dodrow"><span class="chk ${x.done?'done':''}" style="cursor:default"></span><span>${esc(x.t)}</span></div>`).join('')}</div>
    <h2>Monitoring</h2>
    <div class="upd">${p.updates.map(u=>`<div class="u"><small>${esc(u.d)}</small><div>${esc(u.txt)}</div></div>`).join('')}</div>
+  `;
+}
+
+/* ---- Portfolio board & Team capacity ---- */
+function memberByRole(r){ return MEMBERS.find(m=>m.role===r); }
+function visibleProjects(){ if(state.persona!=='staff') return PROJECTS; const mb=memberByRole(state.role); return mb?PROJECTS.filter(p=>p.team.includes(mb.name)):[]; }
+function within(t,a,b){ return t>=new Date(a+'T00:00:00') && t<=new Date(b+'T00:00:00'); }
+function addDay(s){ const d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+
+function viewPortfolio(){
+  const projs=visibleProjects();
+  const board=['Rencana','Aktif','Selesai'].map(st=>{
+    const list=projs.filter(p=>p.status===st);
+    return `<div class="pcol"><div class="pcol-h"><span>${projStatusPill(st)}</span><span class="cnt">${list.length}</span></div>
+      ${list.map(pcardHTML).join('')||'<div class="muted" style="padding:8px;font-size:12px">— kosong —</div>'}</div>`;
+  }).join('');
+  return `
+   <div class="crumb">Manajemen Proyek › Portfolio Board</div>
+   <h1>📊 Portfolio Board</h1>
+   <p class="lead">Kesehatan seluruh proyek dalam satu papan, dikelompokkan per status. Kalender menjawab <i>kapan</i>; papan ini menjawab <i>sedang bagaimana</i>. Klik kartu untuk buka status detailnya.</p>
+   <div class="pboard">${board}</div>
+   <div class="note">Output tiap proyek = sebuah <b>Flow</b>. Kartu "Selesai" berarti flow-nya sudah live di Division Flow & menghasilkan Daily Routines.</div>
+  `;
+}
+function pcardHTML(p){
+  const avs=p.team.map(n=>`<i title="${esc(n)}">${esc(n[0])}</i>`).join('');
+  const flow=flowByName(p.relatedFlow);
+  return `<div class="pcard bl-${p.color}" data-project="${p.id}">
+    <div class="pcard-t">${esc(p.name)}</div>
+    <div class="pcard-m">${esc(p.owner)} · ${fmtDate(p.start)}–${fmtDate(p.end)}</div>
+    <div class="prog"><div style="width:${p.progress}%"></div></div>
+    <div class="pcard-f"><div class="avs">${avs}</div><span>${flow?'✓ flow tersimpan':p.sopCount+' SOP'}</span></div>
+  </div>`;
+}
+function viewCapacity(){
+  const members=visibleMembers();
+  const today=new Date(DEMO_TODAY.y,DEMO_TODAY.m,DEMO_TODAY.d);
+  const maxRt=Math.max(1,...MEMBERS.map(m=>SOPS.filter(s=>s.role===m.role).length));
+  const rows=members.map(mem=>{
+    const cur=PROJECTS.find(p=>p.team.includes(mem.name)&&within(today,p.start,p.end));
+    const rt=SOPS.filter(s=>s.role===mem.role).length;
+    const free=cur?fmtDate(addDay(cur.end)):'Sekarang';
+    const util=cur?100:Math.round(rt/maxRt*55);
+    const barcol=cur?'#c0392b':'#137a4d';
+    return `<tr>
+      <td><b>${esc(mem.name)}</b><br><span class="muted" style="font-size:11px">${esc(mem.role)}</span></td>
+      <td>${cur?`<span class="pill c-${cur.color}" style="cursor:pointer" data-project="${cur.id}">${esc(cur.name)}</span>`:'<span class="muted">—</span>'}</td>
+      <td>${cur?pill('p-lock','Penuh'):pill('p-open','Tersedia')}</td>
+      <td class="${cur?'':'muted'}">${esc(free)}</td>
+      <td>${rt} SOP / rutinitas</td>
+      <td><div class="uti"><div style="width:${util}%;background:${barcol}"></div></div></td>
+    </tr>`;
+  }).join('');
+  return `
+   <div class="crumb">Manajemen Proyek › Team Capacity</div>
+   <h1>👥 Team Capacity</h1>
+   <p class="lead">Beban tiap anggota: proyek yang sedang dikerjakan (kapasitas 1), kapan bebas untuk proyek baru, plus beban rutinitas harian. Inilah dasar <b>WLA / remaining manhours</b> — proyek hanya diberikan ke anggota yang bebas.</p>
+   <div class="card"><table>
+     <thead><tr><th>Anggota</th><th>Proyek sekarang</th><th>Kapasitas</th><th>Bebas mulai</th><th>Beban rutinitas</th><th>Utilisasi</th></tr></thead>
+     <tbody>${rows}</tbody></table></div>
+   <div class="note">Acuan tanggal: <b>8 Juli 2026</b>. "Penuh" = sedang di 1 proyek → tak bisa ditambah proyek lain sampai <i>bebas mulai</i>. "Tersedia" = hanya menjalankan rutinitas, siap ambil proyek. Klik nama proyek untuk detailnya.</div>
   `;
 }
 
