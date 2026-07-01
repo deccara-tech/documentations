@@ -25,6 +25,11 @@
   .app{display:grid;grid-template-columns:248px 1fr;height:100vh;overflow:hidden}
   .side{background:var(--sidebar);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto}
   .main{overflow-y:auto;position:relative}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;padding:9px 16px;background:rgba(255,255,255,.85);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+  .topbar button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:7px;color:var(--ink-soft);font-size:12px;line-height:1}
+  .topbar button:hover:not(:disabled){background:#faf9f7}
+  .topbar button:disabled{opacity:.38;cursor:not-allowed}
+  .topbar-here{font-size:12px;color:var(--ink-faint);margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .wrap{max-width:940px;margin:0 auto;padding:34px 40px 120px}
 
   /* sidebar */
@@ -163,6 +168,44 @@
   .opt.correct{border-color:var(--ok);background:var(--ok-bg)}
   .opt.wrong{border-color:var(--lock);background:var(--lock-bg)}
   .scorebig{font-size:40px;font-weight:800;letter-spacing:-.02em}
+  .link{color:var(--accent);cursor:pointer;text-decoration:underline}
+
+  /* project calendar */
+  .cal-top{display:flex;align-items:center;gap:14px;margin:6px 0 14px;flex-wrap:wrap}
+  .cal-nav{display:flex;align-items:center;gap:4px}
+  .cal-nav button{border:1px solid var(--line);background:#fff;width:32px;height:32px;border-radius:7px;font-size:16px;color:var(--ink-soft);line-height:1}
+  .cal-nav button:hover{background:#faf9f7}
+  .cal-month{font-size:16px;font-weight:700;min-width:150px;text-align:center}
+  .cal{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .cal-head{display:grid;grid-template-columns:150px 1fr;background:#faf9f7;border-bottom:1px solid var(--line)}
+  .cal-head .lbl{padding:10px 12px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;align-self:center}
+  .cal-scale{position:relative;height:36px}
+  .cal-scale .tick{position:absolute;top:11px;font-size:11px;color:var(--ink-faint);transform:translateX(-50%);white-space:nowrap}
+  .cal-row{display:grid;grid-template-columns:150px 1fr;border-top:1px solid var(--line-2)}
+  .cal-mem{padding:10px 12px;border-right:1px solid var(--line-2)}
+  .cal-mem b{display:block;font-size:13px}
+  .cal-mem span{font-size:11px;color:var(--ink-faint)}
+  .cal-track{position:relative;height:52px;overflow:hidden}
+  .cal-gl{position:absolute;top:0;bottom:0;width:1px;background:#f2f0ec}
+  .cal-today{position:absolute;top:0;bottom:0;border-left:1.5px dashed #c0392b;z-index:3}
+  .cal-bar{position:absolute;top:11px;height:30px;border-radius:7px;display:flex;align-items:center;gap:4px;padding:0 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;overflow:hidden;box-shadow:var(--shadow);z-index:2}
+  .cal-bar:hover{filter:brightness(.97);transform:translateY(-1px)}
+  .cal-free{position:absolute;top:19px;font-size:11px;font-style:italic;color:#c0bcb2;transform:translateX(-50%);pointer-events:none}
+  .c-blue{background:#e7effd;border:1px solid #2f6df6;color:#1b4fbf}
+  .c-teal{background:#dff5f1;border:1px solid #0d9488;color:#0b6b61}
+  .c-purple{background:#efe6fb;border:1px solid #7c3aed;color:#5b23b5}
+  .c-amber{background:#fdeecf;border:1px solid #d97706;color:#a85d05}
+
+  /* project detail */
+  .prog{height:8px;background:#efece7;border-radius:6px;overflow:hidden;margin-top:8px;max-width:320px}
+  .prog>div{height:100%;background:var(--ok)}
+  .mchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:3px 11px;margin:0 5px 5px 0;font-size:12.5px}
+  .mchip small{color:var(--ink-faint)}
+  .upd{border-left:2px solid var(--line);padding-left:14px;margin-left:2px}
+  .upd .u{padding:8px 0;border-bottom:1px solid var(--line-2)}
+  .upd .u:last-child{border-bottom:0}
+  .upd .u small{color:var(--ink-faint)}
+  .dodrow{display:flex;gap:9px;align-items:flex-start;padding:6px 0}
 
   /* toast */
   .toast-wrap{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:50}
@@ -197,7 +240,14 @@
       Mock POC · data = 9 flow / 91 SOP nyata dari <code>docs/</code>.<br>Panel AI = skrip demo.
     </div>
   </aside>
-  <main class="main" id="main"></main>
+  <main class="main" id="main">
+    <div class="topbar" id="topbar">
+      <button id="navBack" title="Kembali (Alt+←)">◀</button>
+      <button id="navFwd" title="Maju (Alt+→)">▶</button>
+      <span class="topbar-here" id="navHere"></span>
+    </div>
+    <div id="mainbody"></div>
+  </main>
 </div>
 <div class="toast-wrap" id="toasts"></div>
 
@@ -733,7 +783,8 @@ function allRoles(){ const set=new Set(); SOPS.forEach(s=>set.add(s.role)); retu
 const state={ persona:'management', role:'Sales/CS', view:'studio',
   flow:null, sop:null, openSop:null, studioStage:0, quizFlow:'Inquiry & Penawaran',
   quizAns:{}, quizDone:false, scores:[{who:'Rani (GA)',flow:'Pengadaan Bahan Baku',score:80,date:'kemarin'}],
-  done:{}, loop:{store:false,division:false,onboard:false,test:false,routine:false,retrieve:false} };
+  done:{}, cal:{y:2026,m:6}, project:null,
+  loop:{store:false,division:false,onboard:false,test:false,routine:false,retrieve:false} };
 
 /* ============================================================= helpers */
 const el=(h)=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstElementChild;};
@@ -754,6 +805,8 @@ const NAV=[
   {id:'studio',ico:'✨',label:'AI Studio — Susun Flow',mgmtOnly:true},
   {id:'division',ico:'🗂',label:'Division Flow',tag:'Mgmt',mgmtOnly:true},
   {id:'onboard',ico:'🎓',label:'Onboarding',tag:'Staff'},
+  {grp:'Manajemen Proyek'},
+  {id:'project',ico:'📅',label:'Project Calendar'},
   {grp:'Operasi Harian'},
   {id:'routine',ico:'☑️',label:'Daily Routines'},
   {id:'test',ico:'📝',label:'Post-Test & Skor'},
@@ -768,15 +821,48 @@ function renderNav(){
     if(item.mgmtOnly && state.persona==='staff') return;
     const b=el(`<button data-v="${item.id}" class="${state.view===item.id?'on':''}">
       <span class="ico">${item.ico}</span><span>${item.label}</span>${item.tag?`<span class="tag">${item.tag}</span>`:''}</button>`);
-    b.onclick=()=>{ state.view=item.id; state.flow=null; state.sop=null; render(); };
+    b.onclick=()=>{ state.view=item.id; state.flow=null; state.sop=null; state.project=null; render(); };
     n.appendChild(b);
   });
+}
+
+/* ============================================================= NAV HISTORY (SPA back/forward) */
+let navHist=[], histIdx=-1, navApplying=false;
+function locSnapshot(){ return {view:state.view, flow:state.flow?state.flow.name:null, project:state.project?state.project.id:null, cy:state.cal.y, cm:state.cal.m}; }
+function locKey(l){ return [l.view,l.flow,l.project,l.cy,l.cm].join('|'); }
+function recordHistory(){
+  if(navApplying) return;
+  const loc=locSnapshot();
+  if(histIdx>=0 && locKey(navHist[histIdx])===locKey(loc)) return;
+  navHist=navHist.slice(0,histIdx+1); navHist.push(loc); histIdx=navHist.length-1;
+}
+function applyLocation(loc){
+  navApplying=true;
+  state.view=loc.view;
+  state.flow=loc.flow?flowByName(loc.flow):null;
+  state.project=loc.project?PROJECTS.find(p=>p.id===loc.project):null;
+  state.cal={y:loc.cy,m:loc.cm};
+  state.openSop=null;
+  render(); navApplying=false;
+}
+function goBack(){ if(histIdx>0){ histIdx--; applyLocation(navHist[histIdx]); } }
+function goFwd(){ if(histIdx<navHist.length-1){ histIdx++; applyLocation(navHist[histIdx]); } }
+function updateTopbar(){
+  const b=document.getElementById('navBack'), f=document.getElementById('navFwd');
+  if(!b) return;
+  b.disabled=histIdx<=0; f.disabled=histIdx>=navHist.length-1;
+  const nav=NAV.find(i=>i.id===state.view)||{};
+  let here=nav.label||state.view;
+  if(state.view==='division'&&state.flow) here='Division Flow › '+state.flow.name;
+  else if(state.view==='project'&&state.project) here='Project Calendar › '+state.project.name;
+  document.getElementById('navHere').textContent=here;
 }
 
 /* ============================================================= VIEWS */
 function render(){
   // Staff: hide mgmt-only sections. Allow reading a flow's detail when drilled in from Onboarding.
   if(state.persona==='staff' && (NAV.find(i=>i.id===state.view)||{}).mgmtOnly && !(state.view==='division'&&state.flow)){ state.view='onboard'; state.flow=null; }
+  recordHistory();
   renderNav();
   document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.p===state.persona));
   document.getElementById('rolepick').style.display=state.persona==='staff'?'block':'none';
@@ -786,12 +872,14 @@ function render(){
   if(v==='studio') html=viewStudio();
   else if(v==='division') html=state.flow?viewFlowDetail():viewDivision();
   else if(v==='onboard') html=viewOnboard();
+  else if(v==='project') html=state.project?viewProjectDetail():viewProjectCalendar();
   else if(v==='routine') html=viewRoutine();
   else if(v==='test') html=viewTest();
   else if(v==='ai') html=viewAI();
   else if(v==='schema') html=viewSchema();
-  m.innerHTML=`<div class="wrap">${html}</div>`;
+  document.getElementById('mainbody').innerHTML=`<div class="wrap">${html}</div>`;
   m.scrollTop=0;
+  updateTopbar();
   wire();
 }
 
@@ -1150,6 +1238,133 @@ function viewSchema(){
   `;
 }
 
+/* ============================================================= PROJECT MANAGEMENT */
+const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const DEMO_TODAY={y:2026,m:6,d:8}; // 8 Juli 2026 (tetap, agar demo deterministik)
+const MEMBERS=[
+  {name:'Budi',role:'Sales/CS'}, {name:'Rani',role:'GA'}, {name:'Tono',role:'Finance'},
+  {name:'Dewi',role:'QC'}, {name:'Agus',role:'Pengrajin'}, {name:'Sari',role:'Desainer'}
+];
+const PROJECTS=[
+  {id:'P1',name:'Flow: Retur & Refund',color:'blue',start:'2026-07-01',end:'2026-07-14',status:'Aktif',
+   team:['Budi','Rani','Tono'],owner:'Andi — Head Sales',sponsor:'Direktur Operasional',approver:'Head Sales',
+   division:'FLOW ORDER',relatedFlow:'Penanganan Retur & Refund',sopCount:6,progress:65,
+   dod:[{t:'Alur retur terdefinisi dari komplain → keputusan refund/reproduksi',done:true},
+        {t:'6 SOP tersusun lengkap dengan langkah & audit',done:true},
+        {t:'Flow tersimpan & tersambung ke Pemesanan Bespoke',done:false}],
+   updates:[{d:'8 Jul',txt:'Draft 6 SOP selesai di AI Studio, menunggu review Head Sales.'},
+            {d:'4 Jul',txt:'Kickoff — tim Budi/Rani/Tono, target 2 minggu.'}]},
+  {id:'P2',name:'Flow: Pengadaan v2',color:'teal',start:'2026-07-15',end:'2026-07-28',status:'Aktif',
+   team:['Rani','Tono'],owner:'Bu Sri — Head Operasional',sponsor:'Direktur Operasional',approver:'Head Operasional',
+   division:'FLOW SUPPORT',relatedFlow:'Pengadaan Bahan Baku',sopCount:10,progress:30,
+   dod:[{t:'Tambahkan kontrol dual-approval pembayaran vendor',done:true},
+        {t:'Perbarui SOP SUP7-08 (level Rahasia)',done:false},
+        {t:'Uji ulang alur PO → penerimaan → bayar',done:false}],
+   updates:[{d:'15 Jul',txt:'Mulai revisi alur pembayaran vendor.'}]},
+  {id:'P3',name:'Flow: QC Membatik Digital',color:'purple',start:'2026-07-01',end:'2026-07-21',status:'Aktif',
+   team:['Dewi','Agus'],owner:'Hadi — Head Produksi',sponsor:'Direktur Produksi',approver:'Head Produksi',
+   division:'FLOW PRODUKSI',relatedFlow:'Proses Membatik',sopCount:10,progress:55,
+   dod:[{t:'Digitalkan ceklist QC tengah (PRD6-05)',done:true},
+        {t:'Percabangan rework terpetakan di sub-items',done:true},
+        {t:'Rubrik penilaian QC seragam antar-pengrajin',done:false}],
+   updates:[{d:'7 Jul',txt:'Keputusan QC Tengah + jalur rework selesai dipetakan.'},
+            {d:'1 Jul',txt:'Kickoff proyek digitalisasi QC.'}]},
+  {id:'P4',name:'Flow: Onboarding Desainer',color:'amber',start:'2026-07-15',end:'2026-07-31',status:'Rencana',
+   team:['Budi','Sari'],owner:'Andi — Head Sales',sponsor:'HR',approver:'Head Sales',
+   division:'FLOW ORDER',relatedFlow:'',sopCount:5,progress:5,
+   dod:[{t:'Susun 5 SOP onboarding untuk peran Desainer',done:false},
+        {t:'Sertakan post-test per SOP',done:false},
+        {t:'Sambungkan ke jadwal harian Onboarding',done:false}],
+   updates:[{d:'8 Jul',txt:'Masih tahap rencana — mulai 15 Jul setelah Budi selesai proyek Retur.'}]},
+  {id:'P5',name:'Flow: After-Sales Otomasi',color:'blue',start:'2026-08-04',end:'2026-08-22',status:'Rencana',
+   team:['Budi','Rani'],owner:'Andi — Head Sales',sponsor:'Direktur Operasional',approver:'Head Sales',
+   division:'FLOW ORDER',relatedFlow:'Pengiriman & After-Sales',sopCount:10,progress:0,
+   dod:[{t:'Otomasi notifikasi resi & konfirmasi terima',done:false},
+        {t:'Integrasi tiket komplain',done:false}],
+   updates:[{d:'Rencana Agustus',txt:'Menunggu kapasitas Budi & Rani bebas dari proyek Juli.'}]},
+  {id:'P6',name:'Flow: Audit Pemeliharaan',color:'teal',start:'2026-08-11',end:'2026-08-29',status:'Rencana',
+   team:['Tono','Dewi'],owner:'Bu Sri — Head Operasional',sponsor:'Direktur Operasional',approver:'Head Operasional',
+   division:'FLOW SUPPORT',relatedFlow:'Pemeliharaan Alat & Aset',sopCount:10,progress:0,
+   dod:[{t:'Jadwal audit preventif per aset',done:false},{t:'Laporan pemeliharaan bulanan otomatis',done:false}],
+   updates:[{d:'Rencana Agustus',txt:'Antre setelah gelombang proyek Juli.'}]}
+];
+function visibleMembers(){ return state.persona==='staff'?MEMBERS.filter(m=>m.role===state.role):MEMBERS; }
+function projStatusPill(s){ return s==='Aktif'?pill('p-open','● Aktif'):s==='Selesai'?pill('p-support','✓ Selesai'):pill('p-ghost','○ Rencana'); }
+function fmtDate(s){ const dt=new Date(s+'T00:00:00'); return dt.getDate()+' '+MONTHS[dt.getMonth()].slice(0,3); }
+function barFor(p,y,m,days){
+  const ms=new Date(y,m,1), me=new Date(y,m+1,0);
+  const ps=new Date(p.start+'T00:00:00'), pe=new Date(p.end+'T00:00:00');
+  if(pe<ms||ps>me) return null;
+  const vs=ps<ms?1:ps.getDate(), ve=pe>me?days:pe.getDate();
+  return {id:p.id,color:p.color,label:p.name,vs,ve,left:(vs-1)/days*100,width:(ve-vs+1)/days*100,contL:ps<ms,contR:pe>me};
+}
+function freeGaps(bars,days){
+  const iv=bars.map(b=>[b.vs,b.ve]).sort((a,b)=>a[0]-b[0]);
+  let cur=1; const gaps=[];
+  iv.forEach(([s,e])=>{ if(s>cur) gaps.push([cur,s-1]); cur=Math.max(cur,e+1); });
+  if(cur<=days) gaps.push([cur,days]);
+  return gaps.filter(g=>g[1]-g[0]+1>=4).map(g=>((g[0]+g[1])/2-0.5)/days*100);
+}
+function viewProjectCalendar(){
+  const {y,m}=state.cal;
+  const days=new Date(y,m+1,0).getDate();
+  const members=visibleMembers();
+  const ticks=[1,8,15,22,29].filter(t=>t<=days);
+  const scaleHTML=ticks.map(t=>`<div class="tick" style="left:${(t-1)/days*100}%">${t}${t===1?' '+MONTHS[m].slice(0,3):''}</div>`).join('');
+  const glHTML=ticks.map(t=>`<div class="cal-gl" style="left:${(t-1)/days*100}%"></div>`).join('');
+  const todayHTML=(y===DEMO_TODAY.y&&m===DEMO_TODAY.m)?`<div class="cal-today" style="left:${(DEMO_TODAY.d-0.5)/days*100}%"></div>`:'';
+  const rows=members.map(mem=>{
+    const bars=PROJECTS.filter(p=>p.team.includes(mem.name)).map(p=>barFor(p,y,m,days)).filter(Boolean);
+    const gaps=freeGaps(bars,days);
+    return `<div class="cal-row"><div class="cal-mem"><b>${esc(mem.name)}</b><span>${esc(mem.role)}</span></div>
+      <div class="cal-track">${glHTML}${todayHTML}
+        ${gaps.map(g=>`<div class="cal-free" style="left:${g}%">tersedia</div>`).join('')}
+        ${bars.map(b=>`<div class="cal-bar c-${b.color}" style="left:${b.left}%;width:${b.width}%" data-project="${b.id}" title="${esc(b.label)}">${b.contL?'◂ ':''}${esc(b.label)}${b.contR?' ▸':''}</div>`).join('')}
+      </div></div>`;
+  }).join('');
+  return `
+   <div class="crumb">Manajemen Proyek › Project Calendar</div>
+   <h1>📅 Project Calendar</h1>
+   <p class="lead">Dashboard manajemen proyek. Tiap baris = 1 anggota; tiap warna = 1 proyek (tim lintas divisi). Kapasitas 1 → tiap baris tak pernah tumpang tindih. <b>Klik bar</b> untuk buka status proyeknya. Jelajahi bulan dengan ‹ ›.</p>
+   <div class="cal-top">
+     <div class="cal-nav"><button data-nav="prev">‹</button><div class="cal-month">${MONTHS[m]} ${y}</div><button data-nav="next">›</button></div>
+     <button class="btn" data-nav="today">Hari ini</button>
+     <span class="muted">${state.persona==='staff'?'Lane untuk '+esc(state.role):'Semua anggota ('+members.length+')'}</span>
+   </div>
+   <div class="cal">
+     <div class="cal-head"><div class="lbl">Anggota</div><div class="cal-scale">${scaleHTML}</div></div>
+     ${rows||'<div style="padding:22px" class="muted">Tidak ada anggota untuk peran ini di roster demo.</div>'}
+   </div>
+   <div class="note">Aturan kapasitas: 1 anggota hanya boleh di 1 proyek pada satu waktu. Output tiap proyek = sebuah <b>Flow</b> (kumpulan SOP lintas peran) yang lalu tersimpan & menghasilkan Daily Routines.</div>
+  `;
+}
+function viewProjectDetail(){
+  const p=state.project;
+  const teamChips=p.team.map(n=>{const mm=MEMBERS.find(x=>x.name===n);return `<span class="mchip">${esc(n)} <small>${esc(mm?mm.role:'')}</small></span>`;}).join('');
+  const flow=flowByName(p.relatedFlow);
+  const outputHTML=flow
+    ? `<a class="link" data-openflow="${esc(p.relatedFlow)}">Buka flow: ${esc(p.relatedFlow)} →</a> <span class="muted">(${sopsOf(p.relatedFlow).length} SOP tersimpan)</span>`
+    : `<span class="muted">Belum dibuat — akan lahir dari <b>AI Studio</b> (${p.sopCount} SOP direncanakan).</span>`;
+  return `
+   <div class="crumb"><a data-go="project">Project Calendar</a> › ${esc(p.name)}</div>
+   <h1>${esc(p.name)}</h1>
+   <div style="display:flex;gap:6px;margin:6px 0 4px;align-items:center">${projStatusPill(p.status)} ${catPill('FLOW '+p.division.split(' ')[1])} <span class="muted">${fmtDate(p.start)} – ${fmtDate(p.end)}</span></div>
+   <div class="kv">
+     <div class="k">Owner</div><div class="v">${esc(p.owner)}</div>
+     <div class="k">Sponsor</div><div class="v">${esc(p.sponsor)}</div>
+     <div class="k">Approver</div><div class="v">${esc(p.approver)}</div>
+     <div class="k">Tim (kapasitas 1/orang)</div><div class="v">${teamChips}</div>
+     <div class="k">Progress</div><div class="v"><div class="prog"><div style="width:${p.progress}%"></div></div><span class="muted" style="font-size:12px">${p.progress}%</span></div>
+   </div>
+   <h2>Output — Flow yang dihasilkan</h2>
+   <div class="note" style="border-left-color:var(--ok)">🎯 Definisi output proyek ini = sebuah Flow (kumpulan SOP). ${outputHTML}</div>
+   <h2>Definition of Done</h2>
+   <div>${p.dod.map(x=>`<div class="dodrow"><span class="chk ${x.done?'done':''}" style="cursor:default"></span><span>${esc(x.t)}</span></div>`).join('')}</div>
+   <h2>Monitoring</h2>
+   <div class="upd">${p.updates.map(u=>`<div class="u"><small>${esc(u.d)}</small><div>${esc(u.txt)}</div></div>`).join('')}</div>
+  `;
+}
+
 /* ---- loop bar (shows the interconnection lighting up) ---- */
 function loopBar(){
   const L=state.loop;
@@ -1173,7 +1388,7 @@ function wire(){
   const map={studio:'store_none',division:'division',onboard:'onboard',routine:'routine',test:'test',ai:'retrieve'};
   if(map[state.view]&&map[state.view]!=='store_none') litLoop(map[state.view]);
 
-  document.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{state.view=a.dataset.go;state.flow=null;render();});
+  document.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{state.view=a.dataset.go;state.flow=null;state.project=null;render();});
   document.querySelectorAll('[data-flow]').forEach(c=>c.onclick=()=>{state.flow=flowByName(c.dataset.flow);state.view='division'==state.view?'division':state.view; if(state.view==='onboard'){state.view='division';} state.openSop=null; render();});
   // in onboard, clicking a flow should open division detail
   document.querySelectorAll('.obrow[data-flow]').forEach(c=>c.onclick=()=>{state.flow=flowByName(c.dataset.flow);state.view='division';state.openSop=null;render();});
@@ -1199,6 +1414,17 @@ function wire(){
   document.querySelectorAll('[data-cite]').forEach(c=>c.onclick=()=>{const s=SOPS.find(x=>x.id===c.dataset.cite);if(s){state.flow=flowByName(s.flow);state.view='division';state.openSop=s.id;render();}});
 
   document.querySelectorAll('[data-done]').forEach(c=>c.onclick=()=>{const k=c.dataset.done;state.done[k]=!state.done[k];render();});
+
+  // project calendar
+  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{
+    const n=b.dataset.nav;
+    if(n==='prev'){ if(--state.cal.m<0){state.cal.m=11;state.cal.y--;} }
+    else if(n==='next'){ if(++state.cal.m>11){state.cal.m=0;state.cal.y++;} }
+    else { state.cal={y:DEMO_TODAY.y,m:DEMO_TODAY.m}; }
+    render();
+  });
+  document.querySelectorAll('[data-project]').forEach(b=>b.onclick=()=>{state.project=PROJECTS.find(p=>p.id===b.dataset.project);state.view='project';render();});
+  document.querySelectorAll('[data-openflow]').forEach(a=>a.onclick=()=>{state.flow=flowByName(a.dataset.openflow);state.project=null;state.openSop=null;state.view='division';render();});
 }
 function storeFlow(){
   const r=STUDIO_RESULT;
@@ -1219,5 +1445,11 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
 const roleSel=document.getElementById('roleSel');
 allRoles().forEach(r=>roleSel.appendChild(el(`<option ${r==='Sales/CS'?'selected':''}>${esc(r)}</option>`)));
 roleSel.onchange=()=>{state.role=roleSel.value;render();};
+document.getElementById('navBack').onclick=goBack;
+document.getElementById('navFwd').onclick=goFwd;
+document.addEventListener('keydown',e=>{
+  if(e.altKey&&e.key==='ArrowLeft'){e.preventDefault();goBack();}
+  else if(e.altKey&&e.key==='ArrowRight'){e.preventDefault();goFwd();}
+});
 render();
 </script>
