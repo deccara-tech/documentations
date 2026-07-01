@@ -1,0 +1,1223 @@
+<meta charset="utf-8">
+<title>Batik Wolter — Operational OS (POC)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#ffffff; --sidebar:#fbfaf9; --line:#e9e7e2; --line-2:#efedea;
+    --ink:#37352f; --ink-soft:#6b675f; --ink-faint:#9b968c;
+    --accent:#2f6df6; --accent-soft:#eaf1ff;
+    --order:#d97706; --order-bg:#fef3e2;
+    --prod:#7c3aed; --prod-bg:#f3ecff;
+    --support:#0d9488; --support-bg:#e2f6f3;
+    --lock:#b42318; --lock-bg:#fdeceb;
+    --ok:#137a4d; --ok-bg:#e6f5ec;
+    --radius:8px; --shadow:0 1px 2px rgba(15,15,15,.06),0 3px 12px rgba(15,15,15,.05);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.5}
+  button{font-family:inherit;font-size:inherit;cursor:pointer}
+  a{color:inherit}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#dcd9d2;border-radius:6px;border:2px solid var(--bg)}
+
+  /* layout */
+  .app{display:grid;grid-template-columns:248px 1fr;height:100vh;overflow:hidden}
+  .side{background:var(--sidebar);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto}
+  .main{overflow-y:auto;position:relative}
+  .wrap{max-width:940px;margin:0 auto;padding:34px 40px 120px}
+
+  /* sidebar */
+  .brand{padding:16px 16px 10px;display:flex;gap:10px;align-items:center}
+  .logo{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#2f6df6,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px}
+  .brand b{font-size:14px;display:block;line-height:1.2}
+  .brand span{font-size:11px;color:var(--ink-faint)}
+  .persona{padding:6px 12px 12px}
+  .persona-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin:6px 4px}
+  .seg{display:flex;background:#efece7;border-radius:7px;padding:3px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--ink-soft);padding:5px 6px;border-radius:5px;font-size:12px;font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .rolepick{margin:8px 4px 0}
+  .rolepick select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-size:12px}
+  .nav{padding:6px 8px;flex:1}
+  .nav .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin:14px 8px 4px}
+  .nav button{display:flex;align-items:center;gap:9px;width:100%;border:0;background:transparent;color:var(--ink-soft);
+    padding:7px 8px;border-radius:6px;text-align:left;font-size:13.5px}
+  .nav button:hover{background:#efece7}
+  .nav button.on{background:#e9e6df;color:var(--ink);font-weight:600}
+  .nav .ico{width:18px;text-align:center;font-size:14px}
+  .nav .tag{margin-left:auto;font-size:9.5px;color:var(--ink-faint);border:1px solid var(--line);border-radius:20px;padding:1px 6px}
+  .sidefoot{padding:12px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-faint)}
+
+  /* generic */
+  h1{font-size:26px;margin:0 0 2px;letter-spacing:-.01em}
+  h2{font-size:16px;margin:26px 0 10px}
+  .lead{color:var(--ink-soft);margin:0 0 18px;max-width:660px}
+  .crumb{font-size:12px;color:var(--ink-faint);margin-bottom:10px}
+  .crumb a{cursor:pointer;text-decoration:none}.crumb a:hover{text-decoration:underline}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;border:1px solid transparent;white-space:nowrap}
+  .p-order{background:var(--order-bg);color:var(--order)} .p-prod{background:var(--prod-bg);color:var(--prod)} .p-support{background:var(--support-bg);color:var(--support)}
+  .p-linear{background:#eef1f6;color:#4b5566} .p-branch{background:#fdf0e6;color:#b45309}
+  .p-lock{background:var(--lock-bg);color:var(--lock)} .p-open{background:var(--ok-bg);color:var(--ok)}
+  .p-ghost{background:#f1efec;color:var(--ink-soft)}
+  .muted{color:var(--ink-faint)}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:7px;font-weight:600;box-shadow:var(--shadow)}
+  .btn:hover{background:#faf9f7}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.pri:hover{filter:brightness(1.05)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .card{border:1px solid var(--line);border-radius:var(--radius);background:#fff}
+  .note{background:#fbfaf8;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;padding:12px 14px;color:var(--ink-soft);font-size:13px;margin:16px 0}
+
+  /* division flow board */
+  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:6px}
+  .col-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:700;font-size:13px}
+  .fcard{border:1px solid var(--line);border-radius:9px;background:#fff;padding:13px;margin-bottom:12px;cursor:pointer;transition:.12s;box-shadow:var(--shadow)}
+  .fcard:hover{border-color:#cfd6e4;transform:translateY(-1px)}
+  .fcard.fresh{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .fcard .ftitle{font-weight:650;margin-bottom:6px;display:flex;justify-content:space-between;gap:6px}
+  .fcard .fmeta{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+  .fcard .fpurpose{font-size:12.5px;color:var(--ink-soft);margin:2px 0 0}
+  .fcard .fchain{font-size:11.5px;color:var(--ink-faint);margin-top:9px;border-top:1px dashed var(--line-2);padding-top:7px}
+
+  /* flow detail */
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:2px 14px;margin:14px 0}
+  .kv .k{color:var(--ink-faint);font-size:12.5px;padding:5px 0}
+  .kv .v{padding:5px 0}
+  .steps{border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:8px}
+  .srow{display:flex;gap:10px;padding:11px 14px;border-top:1px solid var(--line-2);cursor:pointer;align-items:flex-start}
+  .srow:first-child{border-top:0}
+  .srow:hover{background:#faf9f7}
+  .srow.child{padding-left:40px;background:#fcfbf9}
+  .srow.decision{background:#fffdf7}
+  .snum{width:26px;height:22px;flex:none;border-radius:5px;background:#f1efec;color:var(--ink-soft);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .decision .snum{background:var(--order-bg);color:var(--order)}
+  .sbody{flex:1;min-width:0}
+  .sbody .st{font-weight:600}
+  .sbody .sm{font-size:11.5px;color:var(--ink-faint);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+  .toggle{font-size:11px;color:var(--accent);margin-left:6px}
+  .sdetail{padding:4px 14px 16px 50px;background:#fcfbf9;border-top:1px solid var(--line-2)}
+  .sdetail h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint)}
+  .sdetail ol{margin:0;padding-left:20px}.sdetail ol li{margin:3px 0}
+  .audit{border:1px solid var(--line);border-radius:7px;padding:2px 12px;background:#fff}
+  .audit div{padding:7px 0;border-top:1px solid var(--line-2);font-size:13px}
+  .audit div:first-child{border-top:0}
+  .audit b{color:var(--ink-soft);font-weight:600}
+  .locked{background:var(--lock-bg);border:1px solid #f3c9c5;border-radius:9px;padding:20px;text-align:center;color:var(--lock);margin-top:8px}
+
+  /* onboarding */
+  .day{border:1px solid var(--line);border-radius:9px;margin-bottom:12px;overflow:hidden}
+  .day-h{background:#faf9f7;padding:10px 14px;font-weight:700;display:flex;justify-content:space-between}
+  .day-b{padding:6px 14px}
+  .obrow{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line-2);align-items:center;cursor:pointer}
+  .obrow:first-child{border-top:0}
+  .obrow:hover{color:var(--accent)}
+
+  /* routines / table */
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);font-weight:600}
+  tr.fresh td{background:var(--accent-soft)}
+  .chk{width:16px;height:16px;border:1.5px solid #c9c5bd;border-radius:4px;display:inline-block;cursor:pointer;flex:none;position:relative;top:2px}
+  .chk.done{background:var(--ok);border-color:var(--ok)}
+  .chk.done::after{content:"✓";color:#fff;font-size:11px;position:absolute;left:2px;top:-2px}
+  td.done{color:var(--ink-faint);text-decoration:line-through}
+
+  /* AI panels (scripted) */
+  .chat{border:1px solid var(--line);border-radius:11px;background:#fff;overflow:hidden}
+  .chat-h{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-faint);display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#22c55e}
+  .chat-b{padding:16px;display:flex;flex-direction:column;gap:12px;max-height:none}
+  .msg{display:flex;gap:10px;align-items:flex-start}
+  .av{width:26px;height:26px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+  .av.u{background:#e9e6df;color:var(--ink-soft)} .av.ai{background:linear-gradient(135deg,#2f6df6,#7c3aed);color:#fff}
+  .bub{background:#f7f6f4;border-radius:10px;padding:9px 13px;max-width:80%}
+  .msg.me{flex-direction:row-reverse}
+  .msg.me .bub{background:var(--accent-soft)}
+  .who{font-size:11px;color:var(--ink-faint);margin-bottom:2px}
+  .chat-f{border-top:1px solid var(--line);padding:10px;display:flex;gap:8px}
+  .chat-f input{flex:1;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13px;outline:none}
+  .chat-f input:focus{border-color:var(--accent)}
+  .typing span{display:inline-block;width:6px;height:6px;background:var(--ink-faint);border-radius:50%;margin:0 1px;animation:bl 1s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes bl{0%,60%,100%{opacity:.3}30%{opacity:1}}
+  .template{border:1px solid var(--line);border-radius:11px;background:#fff;padding:0;margin-top:16px;overflow:hidden}
+  .template-h{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#faf9f7}
+  .template-h b{font-size:13px}
+  .tfield{display:grid;grid-template-columns:150px 1fr;border-top:1px solid var(--line-2);font-size:13px}
+  .tfield:first-child{border-top:0}
+  .tfield .tk{padding:9px 16px;color:var(--ink-faint);background:#fcfbf9;border-right:1px solid var(--line-2)}
+  .tfield .tv{padding:9px 16px}
+  .prompts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 13px;font-size:12.5px;color:var(--ink-soft)}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .cite{border:1px solid var(--line);border-radius:7px;padding:8px 11px;margin-top:8px;background:#fcfbf9;font-size:12.5px;cursor:pointer}
+  .cite:hover{border-color:var(--accent)}
+
+  /* quiz */
+  .q{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px}
+  .q .qq{font-weight:650;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 13px;margin:7px 0}
+  .opt:hover{border-color:var(--accent)}
+  .opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .opt.correct{border-color:var(--ok);background:var(--ok-bg)}
+  .opt.wrong{border-color:var(--lock);background:var(--lock-bg)}
+  .scorebig{font-size:40px;font-weight:800;letter-spacing:-.02em}
+
+  /* toast */
+  .toast-wrap{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:50}
+  .toast{background:#20201d;color:#fff;border-radius:10px;padding:13px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:340px;animation:pop .25s}
+  .toast b{display:block;margin-bottom:3px}
+  .toast small{color:#c7c4bd;display:block;line-height:1.45}
+  @keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+  .loopbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .loopbar span{font-size:11px;padding:3px 9px;border-radius:20px;background:#f1efec;color:var(--ink-faint)}
+  .loopbar span.lit{background:var(--ok-bg);color:var(--ok);font-weight:600}
+  @media(max-width:820px){.app{grid-template-columns:1fr}.side{display:none}.board{grid-template-columns:1fr}.wrap{padding:22px}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">BW</div>
+      <div><b>Wolter OS</b><span>Operational System · POC</span></div>
+    </div>
+    <div class="persona">
+      <div class="persona-lbl">Lihat sebagai</div>
+      <div class="seg" id="seg">
+        <button data-p="management" class="on">Management</button>
+        <button data-p="staff">Staff</button>
+      </div>
+      <div class="rolepick" id="rolepick" style="display:none">
+        <select id="roleSel"></select>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidefoot">
+      Mock POC · data = 9 flow / 91 SOP nyata dari <code>docs/</code>.<br>Panel AI = skrip demo.
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ============================================================= DATA (real, from docs/) */
+const RAW_PROSES = `Nama Flow,Kategori,Tipe Flow,Tujuan,Ruang Lingkup,Peran Terlibat,Hari,Urutan Extensive,Urutan Bisnis,Kata Kunci,Lanjut Ke
+Inquiry & Penawaran,FLOW ORDER,Linear,Menangani permintaan masuk dari calon klien hingga terbit penawaran resmi.,Dari klien menghubungi pertama kali sampai penawaran dikirim & dikonfirmasi. Tidak termasuk produksi.,"Sales/CS, Desainer, Head Sales",Hari 1,1,1,"inquiry, penawaran, quotation, calon klien, harga",Pemesanan Bespoke
+Pengiriman & After-Sales,FLOW ORDER,Linear,Mengirim produk jadi ke klien dan menangani layanan pasca-pembelian.,Dari produk lolos QC final sampai diterima klien & komplain (bila ada) tertangani.,"GA, Admin, Sales/CS",Hari 3,2,8,"pengiriman, ekspedisi, after sales, komplain, garansi",
+Pemesanan Bespoke,FLOW ORDER,Bercabang,Memproses pesanan custom/bespoke termasuk persetujuan desain dan DP.,Dari penawaran diterima klien sampai pesanan dikunci & siap masuk produksi. Termasuk keputusan revisi desain.,"Sales/CS, Desainer, Head Produksi, GA",Hari 2,3,2,"bespoke, custom, desain, dp, approval, revisi",Persiapan Kain & Desain
+Persiapan Kain & Desain,FLOW PRODUKSI,Linear,Menyiapkan kain dan memindahkan desain ke kain sebelum membatik.,Dari pesanan dikunci sampai pola siap dibatik. Tidak termasuk pencantingan.,"Desainer, Pengrajin, Head Produksi",Hari 4,1,3,"kain, pola, ngeblat, desain, persiapan produksi",
+Finishing & QC,FLOW PRODUKSI,Linear,"Menyelesaikan kain batik (pelorodan, cuci, jahit) dan kontrol kualitas akhir.",Dari kain selesai dibatik sampai produk lolos QC final & siap kirim.,"Pengrajin, QC, Head Produksi",Hari 5,2,6,"finishing, pelorodan, qc, kontrol kualitas, packaging",
+Proses Membatik,FLOW PRODUKSI,Bercabang,Mengerjakan pencantingan dan pewarnaan dengan kontrol mutu bertingkat.,Dari pola siap sampai kain selesai diwarnai. Termasuk keputusan lolos/ulang QC tengah.,"Pengrajin, QC, Head Produksi",Hari 4,3,4,"membatik, canting, pewarnaan, qc tengah, rework",
+Pengadaan Bahan Baku,FLOW SUPPORT,Linear,"Mengadakan bahan baku (kain, malam, pewarna) dari vendor secara tepat & terkontrol.",Dari permintaan bahan sampai bahan diterima & pembayaran vendor selesai.,"GA, Finance, Head Operasional",Hari 2,1,5,"pengadaan, bahan baku, vendor, pembelian, pembayaran",
+Pemeliharaan Alat & Aset,FLOW SUPPORT,Linear,Merawat alat produksi & aset kantor agar selalu siap pakai.,Dari jadwal/laporan kerusakan sampai alat kembali normal & tercatat.,"GA, Teknisi, Head Operasional",Hari 3,2,9,"pemeliharaan, perawatan, alat, aset, perbaikan",
+Rekrutmen Pengrajin,FLOW SUPPORT,Bercabang,Merekrut pengrajin batik baru dengan seleksi keterampilan.,Dari kebutuhan tenaga sampai keputusan diterima/ditolak & onboarding awal.,"GA, Head Produksi, Pengrajin Senior",Hari 5,3,7,"rekrutmen, seleksi, pengrajin, tes keterampilan, onboarding",`;
+
+const RAW_SOP = `Judul SOP,ID,Peran,Proses,Tipe,Jalur,Induk (ID),Urutan,Level,Kapan Dipakai,Kata Kunci,Cabang Ke,Langkah,Mekanisme Audit
+Sales: Terima & Catat Inquiry,ORD1-01,Sales/CS,Inquiry & Penawaran,Aksi,Utama,,1,Umum,Saat ada pesan/telepon calon klien masuk,"inquiry, catat, lead",,"1. Buka Notion database Leads.
+2. Catat nama, kontak, dan kebutuhan klien.
+3. Beri label sumber lead (IG/WA/Referral).
+4. Set status 'Baru'.","JIKA TIDAK DIKERJAKAN: Lead hilang & tidak terlacak.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Data klien salah -> salah follow-up.
+DICEK OLEH: Head Sales — Audit harian jumlah lead vs status di Notion."
+Sales: Kualifikasi Kebutuhan,ORD1-02,Sales/CS,Inquiry & Penawaran,Aksi,Utama,,2,Umum,Setelah lead tercatat,"kualifikasi, kebutuhan, budget",,"1. Hubungi klien untuk gali kebutuhan.
+2. Tanya jenis batik, jumlah, dan kisaran budget.
+3. Catat ringkasan di kartu Lead.
+4. Tentukan apakah lanjut ke penawaran.","JIKA TIDAK DIKERJAKAN: Penawaran meleset dari kebutuhan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah estimasi -> revisi berulang.
+DICEK OLEH: Head Sales — Review mingguan kartu lead."
+Sales: Minta Estimasi Desain,ORD1-03,Sales/CS,Inquiry & Penawaran,Aksi,Utama,,3,Umum,Bila pesanan butuh desain,"estimasi, brief desain",,"1. Susun brief kebutuhan desain.
+2. Kirim brief ke Desainer via Notion.
+3. Set tenggat estimasi.","JIKA TIDAK DIKERJAKAN: Desainer tidak punya acuan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Estimasi tidak realistis.
+DICEK OLEH: Head Sales — Cek kelengkapan brief."
+Desainer: Buat Estimasi Desain,ORD1-04,Desainer,Inquiry & Penawaran,Aksi,Utama,,4,Umum,Setelah brief diterima,"estimasi desain, tingkat kesulitan",,"1. Pelajari brief dari Sales.
+2. Tentukan tingkat kesulitan & estimasi waktu.
+3. Catat estimasi di Notion.
+4. Kembalikan ke Sales.","JIKA TIDAK DIKERJAKAN: Penawaran tertunda.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Estimasi waktu salah -> telat produksi.
+DICEK OLEH: Head Produksi — Bandingkan estimasi vs realisasi."
+Sales: Susun Penawaran,ORD1-05,Sales/CS,Inquiry & Penawaran,Aksi,Utama,,5,Umum,Setelah estimasi lengkap,"penawaran, quotation, harga",,"1. Buka template penawaran.
+2. Isi harga, jumlah, dan tenggat.
+3. Hitung total & syarat DP.
+4. Simpan sebagai draft.","JIKA TIDAK DIKERJAKAN: Tidak ada dokumen resmi.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Harga salah -> rugi/komplain.
+DICEK OLEH: Head Sales — Approval harga sebelum kirim."
+Head Sales: Approve Penawaran,ORD1-06,Head Sales,Inquiry & Penawaran,Aksi,Utama,,6,Umum,Sebelum penawaran dikirim,"approval, harga, margin",,"1. Buka draft penawaran.
+2. Cek margin & kelayakan harga.
+3. Setujui atau minta revisi.","JIKA TIDAK DIKERJAKAN: Penawaran rugi lolos.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Margin tipis tak terdeteksi.
+DICEK OLEH: Finance — Audit margin bulanan."
+Sales: Kirim Penawaran,ORD1-07,Sales/CS,Inquiry & Penawaran,Aksi,Utama,,7,Umum,Setelah disetujui,"kirim penawaran, follow up",,"1. Ekspor penawaran jadi PDF.
+2. Kirim ke klien via email/WA.
+3. Catat tanggal kirim & set reminder follow-up.","JIKA TIDAK DIKERJAKAN: Penawaran tidak terkirim.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah kirim ke klien lain.
+DICEK OLEH: Head Sales — Cek log pengiriman."
+Sales: Follow-up Penawaran,ORD1-08,Sales/CS,Inquiry & Penawaran,Aksi,Utama,,8,Umum,2-3 hari setelah kirim,"follow up, negosiasi",,"1. Hubungi klien menanyakan respon.
+2. Catat keberatan/negosiasi.
+3. Update status penawaran.","JIKA TIDAK DIKERJAKAN: Klien lupa & batal.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Negosiasi tak tercatat.
+DICEK OLEH: Head Sales — Review pipeline mingguan."
+Sales: Catat Hasil Penawaran,ORD1-09,Sales/CS,Inquiry & Penawaran,Aksi,Utama,,9,Umum,Setelah klien merespon,"status, deal, hasil",,"1. Update status: Deal / Tidak.
+2. Catat alasan bila ditolak.
+3. Arsipkan kartu lead.","JIKA TIDAK DIKERJAKAN: Data konversi tidak akurat.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Status salah -> salah laporan.
+DICEK OLEH: Head Sales — Audit conversion rate."
+Sales: Serahkan ke Proses Pemesanan,ORD1-10,Sales/CS,Inquiry & Penawaran,Aksi,Utama,,10,Umum,Bila penawaran DEAL,"handoff, lanjut, pemesanan",,"1. Pastikan penawaran berstatus Deal.
+2. Siapkan ringkasan pesanan.
+3. LANJUT KE proses 'Pemesanan Bespoke'.","JIKA TIDAK DIKERJAKAN: Pesanan menggantung.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Data handoff kurang.
+DICEK OLEH: Head Sales — Cek deal yang belum lanjut."
+Admin: Terima Produk Lolos QC,ORD2-01,Admin,Pengiriman & After-Sales,Aksi,Utama,,1,Umum,Saat produk siap kirim,"terima produk, qc lolos",,"1. Terima produk dari QC.
+2. Cek kesesuaian dengan pesanan.
+3. Catat di database Pengiriman.","JIKA TIDAK DIKERJAKAN: Produk salah terkirim.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Jumlah tak cocok.
+DICEK OLEH: Head Sales — Cek ceklist serah terima."
+Admin: Siapkan Dokumen Kirim,ORD2-02,Admin,Pengiriman & After-Sales,Aksi,Utama,,2,Umum,Sebelum pengiriman,"dokumen, invoice, surat jalan",,"1. Buat surat jalan & invoice.
+2. Lampirkan kartu garansi.
+3. Serahkan ke GA.","JIKA TIDAK DIKERJAKAN: Paket tanpa dokumen.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Invoice salah nominal.
+DICEK OLEH: Finance — Audit invoice vs pesanan."
+GA: Packing Produk,ORD2-03,GA,Pengiriman & After-Sales,Aksi,Utama,,3,Umum,Setelah dokumen siap,"packing, kemasan",,"1. Siapkan kemasan standar Wolter.
+2. Bungkus produk dengan aman.
+3. Sertakan dokumen & kartu garansi.","JIKA TIDAK DIKERJAKAN: Produk rusak saat kirim.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Kemasan tidak standar.
+DICEK OLEH: Head Operasional — Cek foto packing."
+GA: Pilih Ekspedisi,ORD2-04,GA,Pengiriman & After-Sales,Aksi,Utama,,4,Umum,Sebelum kirim,"ekspedisi, kurir, ongkir",,"1. Bandingkan ongkir & estimasi.
+2. Pilih ekspedisi sesuai SLA.
+3. Catat nomor resi.","JIKA TIDAK DIKERJAKAN: Paket telat.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Ongkir membengkak.
+DICEK OLEH: Head Operasional — Audit biaya kirim bulanan."
+GA: Kirim & Input Resi,ORD2-05,GA,Pengiriman & After-Sales,Aksi,Utama,,5,Umum,Saat serah ke kurir,"kirim, resi, tracking",,"1. Serahkan paket ke kurir.
+2. Input nomor resi ke Notion.
+3. Set status 'Dikirim'.","JIKA TIDAK DIKERJAKAN: Resi tidak tercatat.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Resi salah input.
+DICEK OLEH: Admin — Cek resi vs pesanan."
+Sales/CS: Informasikan Klien,ORD2-06,Sales/CS,Pengiriman & After-Sales,Aksi,Utama,,6,Umum,Setelah dikirim,"notifikasi, info resi",,"1. Kirim info resi ke klien.
+2. Berikan estimasi tiba.
+3. Catat konfirmasi klien.","JIKA TIDAK DIKERJAKAN: Klien tidak tahu status.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Info resi salah.
+DICEK OLEH: Head Sales — Cek log notifikasi."
+Sales/CS: Konfirmasi Penerimaan,ORD2-07,Sales/CS,Pengiriman & After-Sales,Aksi,Utama,,7,Umum,Setelah estimasi tiba,"konfirmasi terima, selesai",,"1. Hubungi klien pastikan barang diterima.
+2. Tanyakan kondisi produk.
+3. Update status 'Selesai'.","JIKA TIDAK DIKERJAKAN: Komplain telat ketahuan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Status palsu 'selesai'.
+DICEK OLEH: Head Sales — Audit status vs resi."
+Sales/CS: Terima Komplain,ORD2-08,Sales/CS,Pengiriman & After-Sales,Aksi,Utama,,8,Umum,Bila ada keluhan klien,"komplain, keluhan",,"1. Catat detail komplain.
+2. Minta foto/bukti.
+3. Tentukan kategori komplain.","JIKA TIDAK DIKERJAKAN: Komplain tidak tertangani.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah kategori -> salah solusi.
+DICEK OLEH: Head Sales — Review tiket komplain."
+Sales/CS: Tindak Lanjut Komplain,ORD2-09,Sales/CS,Pengiriman & After-Sales,Aksi,Utama,,9,Umum,Setelah komplain dikategorikan,"solusi, garansi, retur",,"1. Tentukan solusi (perbaikan/retur).
+2. Koordinasi dengan Produksi/GA.
+3. Informasikan solusi ke klien.","JIKA TIDAK DIKERJAKAN: Klien kecewa & churn.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Solusi tidak konsisten.
+DICEK OLEH: Head Sales — Audit waktu penyelesaian."
+Admin: Arsip & Laporan,ORD2-10,Admin,Pengiriman & After-Sales,Aksi,Utama,,10,Umum,Setelah pesanan tuntas,"arsip, laporan",,"1. Arsipkan dokumen pesanan.
+2. Catat ke laporan penjualan.
+3. Tutup kartu pesanan.","JIKA TIDAK DIKERJAKAN: Data hilang.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Laporan tidak akurat.
+DICEK OLEH: Finance — Rekon bulanan."
+Sales/CS: Buka Order Bespoke,ORD3-01,Sales/CS,Pemesanan Bespoke,Aksi,Utama,,1,Umum,Saat penawaran deal,"order, bespoke, buka",,"1. Buat kartu order dari penawaran.
+2. Salin spesifikasi pesanan.
+3. Set status 'Desain'.","JIKA TIDAK DIKERJAKAN: Order tidak terbentuk.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Spesifikasi salah salin.
+DICEK OLEH: Head Sales — Cek order vs penawaran."
+Desainer: Buat Draf Desain,ORD3-02,Desainer,Pemesanan Bespoke,Aksi,Utama,,2,Umum,Setelah order dibuka,"draf desain, mockup",,"1. Pelajari spesifikasi order.
+2. Buat draf desain/mockup.
+3. Unggah draf ke kartu order.","JIKA TIDAK DIKERJAKAN: Produksi tanpa acuan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Draf tidak sesuai brief.
+DICEK OLEH: Head Produksi — Review draf."
+Sales/CS: Presentasi Desain ke Klien,ORD3-03,Sales/CS,Pemesanan Bespoke,Aksi,Utama,,3,Umum,Setelah draf siap,"presentasi, approval klien",,"1. Kirim draf ke klien.
+2. Jelaskan detail & material.
+3. Minta keputusan klien.","JIKA TIDAK DIKERJAKAN: Klien bingung -> batal.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah komunikasi material.
+DICEK OLEH: Head Sales — Cek catatan presentasi."
+KEPUTUSAN: Desain Disetujui Klien?,ORD3-04,Head Sales,Pemesanan Bespoke,Keputusan,Utama,,4,Umum,Setelah presentasi,"keputusan, approval, revisi",Jalur A (Setuju); Jalur B (Revisi),"1. Konfirmasi keputusan klien.
+2. Bila SETUJU -> Jalur A.
+3. Bila MINTA REVISI -> Jalur B.","JIKA TIDAK DIKERJAKAN: Order menggantung.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah baca keputusan.
+DICEK OLEH: Head Sales — Audit kartu order tertahan."
+Sales/CS: Kunci Spesifikasi Final,ORD3-05,Sales/CS,Pemesanan Bespoke,Aksi,A,ORD3-04,1,Umum,Bila desain disetujui,"kunci spesifikasi, final",,"1. Catat desain final yang disetujui.
+2. Kunci spesifikasi (tidak boleh berubah).
+3. Hitung total & DP.","JIKA TIDAK DIKERJAKAN: Spesifikasi berubah sepihak.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Total salah hitung.
+DICEK OLEH: Finance — Cek spesifikasi terkunci."
+Finance: Terbitkan Invoice DP,ORD3-06,Finance,Pemesanan Bespoke,Aksi,A,ORD3-04,2,Umum,Setelah spesifikasi dikunci,"invoice dp, tagihan",,"1. Buat invoice DP sesuai ketentuan.
+2. Kirim invoice ke klien.
+3. Set jatuh tempo DP.","JIKA TIDAK DIKERJAKAN: DP tak tertagih.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Nominal DP salah.
+DICEK OLEH: Head Sales — Audit DP terbit vs terbayar."
+Finance: Verifikasi DP Masuk,ORD3-07,Finance,Pemesanan Bespoke,Aksi,A,ORD3-04,3,Umum,Saat klien transfer DP,"verifikasi dp, pembayaran",,"1. Cek mutasi rekening.
+2. Cocokkan nominal & order.
+3. Tandai DP 'Lunas'.","JIKA TIDAK DIKERJAKAN: Produksi jalan tanpa DP.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah cocok pembayaran.
+DICEK OLEH: Head Finance — Rekonsiliasi harian."
+GA: Siapkan Logistik Sampel,ORD3-08,GA,Pemesanan Bespoke,Aksi,A,ORD3-04,4,Umum,Bila perlu kirim sampel kain,"sampel, logistik",,"1. Siapkan sampel kain/warna.
+2. Koordinasi kirim ke klien bila diminta.
+3. Catat pengiriman sampel.","JIKA TIDAK DIKERJAKAN: Sampel tidak terkirim.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Sampel salah.
+DICEK OLEH: Head Operasional — Cek log sampel."
+Head Produksi: Kunci Order & Lanjut Produksi,ORD3-09,Head Produksi,Pemesanan Bespoke,Keputusan,A,ORD3-04,5,Umum,Setelah DP lunas,"kunci order, handoff produksi",LANJUT KE: Persiapan Kain & Desain,"1. Pastikan DP lunas & spesifikasi final.
+2. Set order status 'Siap Produksi'.
+3. LANJUT KE proses 'Persiapan Kain & Desain'.","JIKA TIDAK DIKERJAKAN: Order tak masuk produksi.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Handoff kurang data.
+DICEK OLEH: Head Produksi — Cek order siap vs masuk produksi."
+Desainer: Revisi Desain,ORD3-10,Desainer,Pemesanan Bespoke,Aksi,B,ORD3-04,1,Umum,Bila klien minta revisi,revisi desain,,"1. Catat poin revisi dari klien.
+2. Perbaiki desain.
+3. Unggah revisi ke kartu order.","JIKA TIDAK DIKERJAKAN: Revisi berulang tak terkontrol.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Revisi tidak sesuai permintaan.
+DICEK OLEH: Head Produksi — Hitung jumlah revisi."
+Sales/CS: Presentasikan Revisi,ORD3-11,Sales/CS,Pemesanan Bespoke,Keputusan,B,ORD3-04,2,Umum,Setelah revisi siap,presentasi revisi,Kembali ke Jalur A (Setuju) / Ulang Jalur B (Revisi lagi),"1. Kirim revisi ke klien.
+2. Minta keputusan ulang.
+3. Bila setuju -> kembali ke Jalur A; bila revisi lagi -> ulangi Jalur B.","JIKA TIDAK DIKERJAKAN: Loop revisi tanpa ujung.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Klien lelah -> batal.
+DICEK OLEH: Head Sales — Audit order dengan revisi >3x."
+Head Produksi: Terima Order Produksi,PRD4-01,Head Produksi,Persiapan Kain & Desain,Aksi,Utama,,1,Umum,Saat order masuk produksi,"terima order, jadwal",,"1. Terima order siap produksi.
+2. Cek kelengkapan spesifikasi.
+3. Jadwalkan ke pengrajin.","JIKA TIDAK DIKERJAKAN: Order tidak terjadwal.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Spesifikasi kurang.
+DICEK OLEH: Head Operasional — Cek antrian produksi."
+Desainer: Finalisasi Pola,PRD4-02,Desainer,Persiapan Kain & Desain,Aksi,Utama,,2,Umum,Sebelum kain disiapkan,"pola, finalisasi",,"1. Siapkan file pola final.
+2. Sesuaikan skala ke ukuran kain.
+3. Serahkan pola ke pengrajin.","JIKA TIDAK DIKERJAKAN: Pola tidak pas.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Skala salah.
+DICEK OLEH: Head Produksi — Cek pola vs ukuran."
+GA: Siapkan Kain,PRD4-03,GA,Persiapan Kain & Desain,Aksi,Utama,,3,Umum,Setelah pola final,"kain, stok, ambil",,"1. Ambil kain sesuai spesifikasi dari gudang.
+2. Cek kualitas & ukuran kain.
+3. Serahkan ke pengrajin.","JIKA TIDAK DIKERJAKAN: Kain kurang/salah.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Kain cacat lolos.
+DICEK OLEH: Head Operasional — Cek stok vs pengambilan."
+Pengrajin: Cuci & Setrika Kain,PRD4-04,Pengrajin,Persiapan Kain & Desain,Aksi,Utama,,4,Umum,Sebelum ngeblat,"cuci kain, mordan",,"1. Cuci kain untuk hilangkan kanji.
+2. Keringkan & setrika kain.
+3. Pastikan kain siap blat.","JIKA TIDAK DIKERJAKAN: Warna tidak nempel.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Kain kusut -> pola meleset.
+DICEK OLEH: Head Produksi — Cek kondisi kain."
+Pengrajin: Ngeblat Pola,PRD4-05,Pengrajin,Persiapan Kain & Desain,Aksi,Utama,,5,Umum,Setelah kain siap,"ngeblat, jiplak pola",,"1. Letakkan pola di bawah kain.
+2. Jiplak pola dengan pensil.
+3. Cek kerapian garis.","JIKA TIDAK DIKERJAKAN: Pola tidak terbentuk.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Garis meleset.
+DICEK OLEH: Pengrajin Senior — Inspeksi sampel."
+Pengrajin Senior: Cek Hasil Blat,PRD4-06,Pengrajin Senior,Persiapan Kain & Desain,Aksi,Utama,,6,Umum,Setelah ngeblat,"qc blat, cek pola",,"1. Periksa kesesuaian pola di kain.
+2. Tandai bagian yang perlu perbaikan.
+3. Setujui untuk lanjut canting.","JIKA TIDAK DIKERJAKAN: Cacat pola lolos ke canting.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Standar tidak konsisten.
+DICEK OLEH: Head Produksi — Audit reject rate blat."
+GA: Catat Pemakaian Kain,PRD4-07,GA,Persiapan Kain & Desain,Aksi,Utama,,7,Umum,Setelah kain dipakai,"catat stok, pemakaian",,"1. Catat kain terpakai di Notion.
+2. Update sisa stok.
+3. Laporkan bila stok menipis.","JIKA TIDAK DIKERJAKAN: Stok tidak akurat.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah catat pemakaian.
+DICEK OLEH: Head Operasional — Stock opname bulanan."
+Head Produksi: Assign Pengrajin Canting,PRD4-08,Head Produksi,Persiapan Kain & Desain,Aksi,Utama,,8,Umum,Sebelum membatik,"assign, jadwal canting",,"1. Pilih pengrajin sesuai tingkat kesulitan.
+2. Tetapkan target waktu.
+3. Catat penugasan.","JIKA TIDAK DIKERJAKAN: Beban kerja timpang.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah assign skill.
+DICEK OLEH: Head Operasional — Review beban kerja."
+Pengrajin: Siapkan Alat Canting,PRD4-09,Pengrajin,Persiapan Kain & Desain,Aksi,Utama,,9,Umum,Sebelum mulai canting,"alat, canting, malam",,"1. Siapkan canting & malam.
+2. Panaskan malam ke suhu pas.
+3. Uji aliran malam di kain sisa.","JIKA TIDAK DIKERJAKAN: Mulai dengan alat tak siap.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Malam terlalu panas/dingin.
+DICEK OLEH: Pengrajin Senior — Cek kesiapan alat."
+Head Produksi: Rilis ke Proses Membatik,PRD4-10,Head Produksi,Persiapan Kain & Desain,Aksi,Utama,,10,Umum,Setelah semua siap,"rilis, handoff membatik",,"1. Pastikan kain & alat siap.
+2. Set status 'Siap Dibatik'.
+3. Serahkan ke alur Proses Membatik.","JIKA TIDAK DIKERJAKAN: Produksi tertunda.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Handoff tidak lengkap.
+DICEK OLEH: Head Produksi — Cek antrian membatik."
+Pengrajin: Terima Kain Selesai Warna,PRD5-01,Pengrajin,Finishing & QC,Aksi,Utama,,1,Umum,Setelah pewarnaan,"terima kain, finishing",,"1. Terima kain dari proses membatik.
+2. Cek kelengkapan warna.
+3. Catat masuk finishing.","JIKA TIDAK DIKERJAKAN: Kain tertukar.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Warna belum tuntas lolos.
+DICEK OLEH: Head Produksi — Cek label kain."
+Pengrajin: Pelorodan (Lepas Malam),PRD5-02,Pengrajin,Finishing & QC,Aksi,Utama,,2,Umum,Sebelum finishing akhir,"pelorodan, lorod, malam",,"1. Rebus air hingga mendidih.
+2. Lorod kain untuk lepas malam.
+3. Bilas hingga bersih.","JIKA TIDAK DIKERJAKAN: Malam tersisa -> kotor.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Suhu salah -> warna luntur.
+DICEK OLEH: Pengrajin Senior — Inspeksi kebersihan."
+Pengrajin: Cuci & Keringkan,PRD5-03,Pengrajin,Finishing & QC,Aksi,Utama,,3,Umum,Setelah pelorodan,"cuci, jemur, keringkan",,"1. Cuci kain dengan lembut.
+2. Jemur di tempat teduh.
+3. Pastikan kering merata.","JIKA TIDAK DIKERJAKAN: Kain bau/lembap.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Warna pudar karena panas.
+DICEK OLEH: Head Produksi — Cek kondisi kering."
+Pengrajin: Setrika & Rapikan,PRD5-04,Pengrajin,Finishing & QC,Aksi,Utama,,4,Umum,Sebelum QC,"setrika, rapi",,"1. Setrika kain dengan suhu aman.
+2. Rapikan tepi kain.
+3. Siapkan untuk QC.","JIKA TIDAK DIKERJAKAN: Kain kusut saat QC.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Suhu setrika merusak.
+DICEK OLEH: QC — Cek kerapian."
+QC: Inspeksi Visual,PRD5-05,QC,Finishing & QC,Aksi,Utama,,5,Umum,Setelah finishing,"qc visual, cacat",,"1. Periksa warna, pola, dan kebersihan.
+2. Tandai cacat bila ada.
+3. Catat hasil di ceklist QC.","JIKA TIDAK DIKERJAKAN: Cacat lolos ke klien.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Standar QC tidak konsisten.
+DICEK OLEH: Head Produksi — Audit defect rate."
+QC: Cek Ukuran & Spesifikasi,PRD5-06,QC,Finishing & QC,Aksi,Utama,,6,Umum,Bersama inspeksi visual,"qc ukuran, spesifikasi",,"1. Ukur dimensi produk.
+2. Cocokkan dengan spesifikasi order.
+3. Tandai sesuai/tidak.","JIKA TIDAK DIKERJAKAN: Ukuran tak sesuai pesanan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah baca spesifikasi.
+DICEK OLEH: Head Produksi — Cek vs order."
+QC: Putuskan Lolos / Perbaikan,PRD5-07,QC,Finishing & QC,Aksi,Utama,,7,Umum,Setelah semua cek,"keputusan qc, lolos",,"1. Rekap hasil semua cek.
+2. Bila lolos -> lanjut packaging.
+3. Bila tidak -> kirim balik untuk perbaikan.","JIKA TIDAK DIKERJAKAN: Produk cacat lolos.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Perbaikan tidak terlacak.
+DICEK OLEH: Head Produksi — Audit tingkat perbaikan."
+Pengrajin: Perbaikan (bila perlu),PRD5-08,Pengrajin,Finishing & QC,Aksi,Utama,,8,Umum,Bila QC menolak,"perbaikan, rework",,"1. Terima catatan cacat dari QC.
+2. Perbaiki sesuai catatan.
+3. Kembalikan ke QC untuk cek ulang.","JIKA TIDAK DIKERJAKAN: Cacat tidak diperbaiki.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Perbaikan asal-asalan.
+DICEK OLEH: QC — Cek ulang setelah perbaikan."
+Pengrajin: Packaging Produk,PRD5-09,Pengrajin,Finishing & QC,Aksi,Utama,,9,Umum,Setelah lolos QC,"packaging, kemas",,"1. Lipat produk dengan rapi.
+2. Masukkan ke kemasan Wolter.
+3. Beri label & kartu produk.","JIKA TIDAK DIKERJAKAN: Produk rusak saat simpan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Kemasan tidak standar.
+DICEK OLEH: Head Produksi — Cek foto packaging."
+Head Produksi: Serahkan ke Pengiriman,PRD5-10,Head Produksi,Finishing & QC,Aksi,Utama,,10,Umum,Setelah dikemas,"handoff, kirim",,"1. Pastikan produk lolos & dikemas.
+2. Set status 'Siap Kirim'.
+3. Serahkan ke alur Pengiriman.","JIKA TIDAK DIKERJAKAN: Produk menumpuk.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Serah terima tidak tercatat.
+DICEK OLEH: Head Operasional — Cek antrian siap kirim."
+Pengrajin: Mulai Pencantingan,PRD6-01,Pengrajin,Proses Membatik,Aksi,Utama,,1,Umum,Setelah kain dirilis,"canting, nyanting",,"1. Ambil kain berpola.
+2. Canting mengikuti garis pola.
+3. Jaga ketebalan malam konsisten.","JIKA TIDAK DIKERJAKAN: Pola tidak terbatik.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Malam tidak rata -> warna bocor.
+DICEK OLEH: Pengrajin Senior — Inspeksi berkala."
+Pengrajin: Nembok (Tutup Area),PRD6-02,Pengrajin,Proses Membatik,Aksi,Utama,,2,Umum,Setelah nglowong,"nembok, isen",,"1. Tutup area yang harus tetap putih.
+2. Tambahkan isen-isen sesuai desain.
+3. Cek kerapian tutupan.","JIKA TIDAK DIKERJAKAN: Area bocor warna.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Isen tidak sesuai desain.
+DICEK OLEH: Pengrajin Senior — Cek sebelum warna."
+Pengrajin: Persiapan Pewarnaan Pertama,PRD6-03,Pengrajin,Proses Membatik,Aksi,Utama,,3,Umum,Sebelum celup,"pewarnaan, pencelupan",,"1. Siapkan larutan warna sesuai resep.
+2. Uji warna di kain sisa.
+3. Siapkan area celup.","JIKA TIDAK DIKERJAKAN: Warna meleset dari pesanan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Resep tidak konsisten.
+DICEK OLEH: Head Produksi — Cek resep warna."
+Pengrajin: Pewarnaan Pertama,PRD6-04,Pengrajin,Proses Membatik,Aksi,Utama,,4,Umum,Setelah persiapan,"celup, warna 1",,"1. Celup kain ke larutan warna.
+2. Jaga durasi sesuai standar.
+3. Tiriskan & keringkan.","JIKA TIDAK DIKERJAKAN: Warna belang.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Durasi salah -> warna beda.
+DICEK OLEH: Pengrajin Senior — Cek hasil celup."
+KEPUTUSAN: Lolos QC Tengah?,PRD6-05,QC,Proses Membatik,Keputusan,Utama,,5,Umum,Setelah warna pertama,"keputusan qc tengah, rework",Jalur A (Lolos); Jalur B (Rework),"1. Periksa hasil warna & batikan.
+2. Bila LOLOS -> Jalur A (lanjut).
+3. Bila CACAT -> Jalur B (rework).","JIKA TIDAK DIKERJAKAN: Cacat lanjut ke tahap akhir.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Penilaian tidak konsisten.
+DICEK OLEH: Head Produksi — Audit keputusan QC tengah."
+Pengrajin: Nembok Tahap Dua,PRD6-06,Pengrajin,Proses Membatik,Aksi,A,PRD6-05,1,Umum,Bila lolos QC tengah,"nembok 2, warna 2",,"1. Tutup area warna pertama yang dipertahankan.
+2. Cek kerapian.
+3. Siapkan warna kedua.","JIKA TIDAK DIKERJAKAN: Warna pertama tertimpa.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Tutupan bocor.
+DICEK OLEH: Pengrajin Senior — Inspeksi sebelum celup 2."
+Pengrajin: Pewarnaan Kedua,PRD6-07,Pengrajin,Proses Membatik,Aksi,A,PRD6-05,2,Umum,Setelah nembok dua,"warna 2, celup 2",,"1. Celup kain ke warna kedua.
+2. Jaga durasi standar.
+3. Keringkan kain.","JIKA TIDAK DIKERJAKAN: Gradasi warna gagal.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Durasi salah.
+DICEK OLEH: Pengrajin Senior — Cek hasil akhir warna."
+Pengrajin: Serahkan ke Finishing,PRD6-08,Pengrajin,Proses Membatik,Aksi,A,PRD6-05,3,Umum,Setelah pewarnaan selesai,handoff finishing,,"1. Pastikan warna tuntas.
+2. Catat selesai membatik.
+3. Serahkan ke alur Finishing & QC.","JIKA TIDAK DIKERJAKAN: Kain menumpuk.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Serah terima tak tercatat.
+DICEK OLEH: Head Produksi — Cek antrian finishing."
+Pengrajin: Identifikasi Cacat,PRD6-09,Pengrajin,Proses Membatik,Aksi,B,PRD6-05,1,Umum,Bila QC tengah menolak,"rework, identifikasi cacat",,"1. Terima catatan cacat dari QC.
+2. Identifikasi area bermasalah.
+3. Tentukan metode perbaikan.","JIKA TIDAK DIKERJAKAN: Salah perbaikan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Cacat menyebar.
+DICEK OLEH: Pengrajin Senior — Verifikasi rencana rework."
+Pengrajin: Lakukan Rework,PRD6-10,Pengrajin,Proses Membatik,Keputusan,B,PRD6-05,2,Umum,Setelah identifikasi,"perbaikan, rework",Kembali ke KEPUTUSAN: Lolos QC Tengah?,"1. Perbaiki area cacat.
+2. Cek hasil perbaikan.
+3. Ajukan QC ulang (kembali ke Keputusan QC Tengah).","JIKA TIDAK DIKERJAKAN: Rework berulang.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Kualitas turun.
+DICEK OLEH: Head Produksi — Hitung siklus rework."
+GA: Terima Permintaan Bahan,SUP7-01,GA,Pengadaan Bahan Baku,Aksi,Utama,,1,Umum,Saat stok bahan menipis,"permintaan, pengadaan, bahan",,"1. Terima permintaan dari produksi/gudang.
+2. Cek sisa stok di Notion.
+3. Catat kebutuhan pengadaan.","JIKA TIDAK DIKERJAKAN: Produksi berhenti karena bahan habis.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah jumlah kebutuhan.
+DICEK OLEH: Head Operasional — Cek stok vs permintaan."
+GA: Pilih Vendor,SUP7-02,GA,Pengadaan Bahan Baku,Aksi,Utama,,2,Umum,Setelah kebutuhan jelas,"vendor, supplier, banding",,"1. Buka daftar vendor terdaftar.
+2. Bandingkan harga & kualitas.
+3. Pilih vendor terbaik.","JIKA TIDAK DIKERJAKAN: Beli mahal/kualitas buruk.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Vendor tidak terverifikasi.
+DICEK OLEH: Head Operasional — Audit pemilihan vendor."
+GA: Minta Penawaran Vendor,SUP7-03,GA,Pengadaan Bahan Baku,Aksi,Utama,,3,Umum,Setelah vendor dipilih,"quotation vendor, nego",,"1. Minta penawaran resmi vendor.
+2. Negosiasi harga & tenggat.
+3. Catat kesepakatan.","JIKA TIDAK DIKERJAKAN: Harga tidak terdokumentasi.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Tenggat tidak jelas.
+DICEK OLEH: Head Operasional — Cek dokumen penawaran."
+Head Operasional: Approve Pengadaan,SUP7-04,Head Operasional,Pengadaan Bahan Baku,Aksi,Utama,,4,Umum,Sebelum order vendor,"approval, anggaran",,"1. Cek anggaran tersedia.
+2. Tinjau kewajaran harga.
+3. Setujui atau tolak.","JIKA TIDAK DIKERJAKAN: Pengeluaran tanpa kontrol.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Lewat anggaran.
+DICEK OLEH: Finance — Audit anggaran bulanan."
+GA: Buat Purchase Order,SUP7-05,GA,Pengadaan Bahan Baku,Aksi,Utama,,5,Umum,Setelah disetujui,"po, purchase order",,"1. Buat PO sesuai penawaran.
+2. Kirim PO ke vendor.
+3. Catat PO di Notion.","JIKA TIDAK DIKERJAKAN: Order tanpa PO resmi.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Isi PO salah.
+DICEK OLEH: Finance — Cek PO vs penerimaan."
+GA: Terima & Cek Barang,SUP7-06,GA,Pengadaan Bahan Baku,Aksi,Utama,,6,Umum,Saat barang datang,"terima barang, cek kualitas",,"1. Terima barang dari vendor.
+2. Cek jumlah & kualitas vs PO.
+3. Catat penerimaan/retur.","JIKA TIDAK DIKERJAKAN: Barang kurang/cacat diterima.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah cek kualitas.
+DICEK OLEH: Head Operasional — Audit penerimaan."
+GA: Update Stok Gudang,SUP7-07,GA,Pengadaan Bahan Baku,Aksi,Utama,,7,Umum,Setelah barang diterima,"stok, gudang, update",,"1. Input barang masuk ke Notion.
+2. Update kartu stok.
+3. Susun barang di gudang.","JIKA TIDAK DIKERJAKAN: Stok tidak akurat.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah input jumlah.
+DICEK OLEH: Head Operasional — Stock opname."
+Finance: Bayar Vendor via KlikBCA,SUP7-08,Finance,Pengadaan Bahan Baku,Aksi,Utama,,8,Rahasia,Setelah barang diterima & PO cocok,"pembayaran, klikbca, vendor, rahasia",,"1. Buka KlikBCA Bisnis & login.
+2. Input nomor rekening vendor & nominal sesuai invoice.
+3. Minta approval pembayaran ke Head Finance.
+4. Simpan bukti transfer & tandai 'Lunas'.","JIKA TIDAK DIKERJAKAN: Vendor tidak dibayar -> relasi rusak.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Salah nominal/rekening -> kerugian.
+DICEK OLEH: Head Finance — Rekonsiliasi pembayaran harian & dual-approval."
+GA: Konfirmasi Pembayaran ke Vendor,SUP7-09,GA,Pengadaan Bahan Baku,Aksi,Utama,,9,Umum,Setelah Finance bayar,"konfirmasi bayar, vendor",,"1. Terima info pembayaran dari Finance.
+2. Kirim konfirmasi ke vendor.
+3. Minta tanda terima.","JIKA TIDAK DIKERJAKAN: Vendor merasa belum dibayar.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Konfirmasi salah.
+DICEK OLEH: Head Operasional — Cek tanda terima."
+GA: Tutup Pengadaan,SUP7-10,GA,Pengadaan Bahan Baku,Aksi,Utama,,10,Umum,Setelah semua selesai,"arsip pengadaan, selesai",,"1. Lengkapi dokumen pengadaan.
+2. Arsipkan PO, invoice, bukti.
+3. Tutup kartu pengadaan.","JIKA TIDAK DIKERJAKAN: Dokumen tercecer.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Arsip tidak lengkap.
+DICEK OLEH: Finance — Audit kelengkapan dokumen."
+GA: Catat Daftar Aset,SUP8-01,GA,Pemeliharaan Alat & Aset,Aksi,Utama,,1,Umum,Saat aset baru/awal periode,"daftar aset, inventaris",,"1. Daftarkan aset ke Notion.
+2. Beri kode & lokasi aset.
+3. Tetapkan jadwal perawatan.","JIKA TIDAK DIKERJAKAN: Aset tidak terlacak.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Data aset salah.
+DICEK OLEH: Head Operasional — Audit inventaris."
+GA: Jadwalkan Perawatan Rutin,SUP8-02,GA,Pemeliharaan Alat & Aset,Aksi,Utama,,2,Umum,Awal bulan,"jadwal, perawatan rutin",,"1. Buka jadwal perawatan.
+2. Tetapkan tanggal per alat.
+3. Informasikan ke teknisi.","JIKA TIDAK DIKERJAKAN: Alat rusak mendadak.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Jadwal bentrok.
+DICEK OLEH: Head Operasional — Cek jadwal vs realisasi."
+Teknisi: Lakukan Perawatan Rutin,SUP8-03,Teknisi,Pemeliharaan Alat & Aset,Aksi,Utama,,3,Umum,Sesuai jadwal,"servis, perawatan",,"1. Periksa kondisi alat.
+2. Bersihkan & lumasi bagian perlu.
+3. Catat hasil perawatan.","JIKA TIDAK DIKERJAKAN: Alat cepat aus.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Perawatan asal.
+DICEK OLEH: Head Operasional — Cek log perawatan."
+Staf: Laporkan Kerusakan,SUP8-04,GA,Pemeliharaan Alat & Aset,Aksi,Utama,,4,Umum,Saat alat rusak,"lapor kerusakan, kendala",,"1. Catat kerusakan di Notion.
+2. Lampirkan foto bila ada.
+3. Set prioritas perbaikan.","JIKA TIDAK DIKERJAKAN: Kerusakan dibiarkan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Laporan tidak jelas.
+DICEK OLEH: Head Operasional — Review tiket kerusakan."
+Teknisi: Diagnosa Kerusakan,SUP8-05,Teknisi,Pemeliharaan Alat & Aset,Aksi,Utama,,5,Umum,Setelah laporan masuk,"diagnosa, analisa",,"1. Periksa alat yang rusak.
+2. Tentukan penyebab & solusi.
+3. Estimasi biaya/waktu.","JIKA TIDAK DIKERJAKAN: Salah diagnosa.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Perbaikan tidak tepat.
+DICEK OLEH: Head Operasional — Cek akurasi diagnosa."
+Head Operasional: Approve Perbaikan,SUP8-06,Head Operasional,Pemeliharaan Alat & Aset,Aksi,Utama,,6,Umum,Bila perlu biaya,"approval perbaikan, biaya",,"1. Tinjau estimasi biaya.
+2. Setujui atau cari alternatif.
+3. Catat keputusan.","JIKA TIDAK DIKERJAKAN: Biaya tak terkontrol.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Perbaikan tertunda.
+DICEK OLEH: Finance — Audit biaya perbaikan."
+Teknisi: Lakukan Perbaikan,SUP8-07,Teknisi,Pemeliharaan Alat & Aset,Aksi,Utama,,7,Umum,Setelah disetujui,"perbaikan, eksekusi",,"1. Siapkan suku cadang.
+2. Perbaiki alat.
+3. Uji fungsi alat.","JIKA TIDAK DIKERJAKAN: Alat tetap rusak.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Perbaikan tidak tuntas.
+DICEK OLEH: Head Operasional — Uji pasca-perbaikan."
+GA: Update Status Aset,SUP8-08,GA,Pemeliharaan Alat & Aset,Aksi,Utama,,8,Umum,Setelah perbaikan,"update status, aset",,"1. Catat hasil perbaikan.
+2. Update status aset 'Normal'.
+3. Catat suku cadang terpakai.","JIKA TIDAK DIKERJAKAN: Status aset salah.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Pemakaian sparepart tak tercatat.
+DICEK OLEH: Head Operasional — Cek log aset."
+GA: Evaluasi Aset,SUP8-09,GA,Pemeliharaan Alat & Aset,Aksi,Utama,,9,Umum,Periodik,"evaluasi, peremajaan",,"1. Tinjau riwayat perbaikan aset.
+2. Tandai aset yang perlu diganti.
+3. Usulkan peremajaan.","JIKA TIDAK DIKERJAKAN: Aset boros biaya.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Telat ganti aset.
+DICEK OLEH: Head Operasional — Review biaya per aset."
+GA: Laporan Pemeliharaan,SUP8-10,GA,Pemeliharaan Alat & Aset,Aksi,Utama,,10,Umum,Akhir bulan,laporan pemeliharaan,,"1. Rekap aktivitas pemeliharaan.
+2. Susun laporan biaya.
+3. Serahkan ke Head Operasional.","JIKA TIDAK DIKERJAKAN: Tidak ada jejak.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Laporan tidak akurat.
+DICEK OLEH: Finance — Rekon biaya."
+GA: Identifikasi Kebutuhan Tenaga,SUP9-01,GA,Rekrutmen Pengrajin,Aksi,Utama,,1,Umum,Saat butuh pengrajin,"kebutuhan tenaga, rekrutmen",,"1. Terima permintaan tenaga dari produksi.
+2. Tentukan jumlah & kriteria.
+3. Buka lowongan.","JIKA TIDAK DIKERJAKAN: Produksi kekurangan tenaga.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Kriteria tidak jelas.
+DICEK OLEH: Head Produksi — Cek kebutuhan vs realisasi."
+GA: Kumpulkan Pelamar,SUP9-02,GA,Rekrutmen Pengrajin,Aksi,Utama,,2,Umum,Setelah lowongan dibuka,"pelamar, screening awal",,"1. Kumpulkan lamaran masuk.
+2. Saring administrasi awal.
+3. Buat shortlist.","JIKA TIDAK DIKERJAKAN: Pelamar potensial terlewat.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Screening tidak adil.
+DICEK OLEH: Head Produksi — Review shortlist."
+GA: Jadwalkan Tes Keterampilan,SUP9-03,GA,Rekrutmen Pengrajin,Aksi,Utama,,3,Umum,Setelah shortlist,"jadwal tes, undang",,"1. Tentukan tanggal tes.
+2. Undang kandidat.
+3. Siapkan bahan tes batik.","JIKA TIDAK DIKERJAKAN: Tes berantakan.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Kandidat tidak hadir.
+DICEK OLEH: Head Produksi — Cek kehadiran tes."
+Pengrajin Senior: Uji Keterampilan,SUP9-04,Pengrajin Senior,Rekrutmen Pengrajin,Aksi,Utama,,4,Umum,Saat tes,"tes keterampilan, nilai",,"1. Berikan tugas membatik standar.
+2. Nilai teknik & kerapian.
+3. Catat skor kandidat.","JIKA TIDAK DIKERJAKAN: Lolos kandidat tidak kompeten.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Penilaian subjektif.
+DICEK OLEH: Head Produksi — Audit skor vs rubrik."
+KEPUTUSAN: Kandidat Lolos Tes?,SUP9-05,Head Produksi,Rekrutmen Pengrajin,Keputusan,Utama,,5,Umum,Setelah tes,"keputusan, lolos, tolak",Jalur A (Lolos); Jalur B (Tidak Lolos),"1. Tinjau skor kandidat.
+2. Bila LOLOS -> Jalur A (onboarding).
+3. Bila TIDAK -> Jalur B (arsip).","JIKA TIDAK DIKERJAKAN: Keputusan menggantung.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Bias keputusan.
+DICEK OLEH: Head Produksi — Audit keputusan rekrutmen."
+GA: Buat Kontrak Kerja,SUP9-06,GA,Rekrutmen Pengrajin,Aksi,A,SUP9-05,1,Umum,Bila kandidat lolos,"kontrak, perjanjian kerja",,"1. Siapkan kontrak sesuai ketentuan.
+2. Jelaskan isi ke kandidat.
+3. Tanda tangani kontrak.","JIKA TIDAK DIKERJAKAN: Hubungan kerja tanpa dasar.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Isi kontrak salah.
+DICEK OLEH: Head Produksi — Cek arsip kontrak."
+GA: Onboarding Administratif,SUP9-07,GA,Rekrutmen Pengrajin,Aksi,A,SUP9-05,2,Umum,Setelah kontrak,"onboarding, data karyawan",,"1. Daftarkan data karyawan.
+2. Berikan akses & atribut kerja.
+3. Catat di sistem HR.","JIKA TIDAK DIKERJAKAN: Karyawan tak terdata.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Akses salah.
+DICEK OLEH: Head Operasional — Audit data karyawan."
+Pengrajin Senior: Pendampingan Awal,SUP9-08,Pengrajin Senior,Rekrutmen Pengrajin,Keputusan,A,SUP9-05,3,Umum,Minggu pertama,"pendampingan, mentoring",LANJUT KE: Proses Membatik (penugasan perdana),"1. Kenalkan standar mutu Wolter.
+2. Dampingi pekerjaan pertama.
+3. Beri umpan balik.","JIKA TIDAK DIKERJAKAN: Pengrajin baru tak sesuai standar.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Mentoring tidak jalan.
+DICEK OLEH: Head Produksi — Cek progres minggu 1."
+GA: Informasikan Penolakan,SUP9-09,GA,Rekrutmen Pengrajin,Aksi,B,SUP9-05,1,Umum,Bila kandidat tidak lolos,"penolakan, info",,"1. Sampaikan hasil dengan sopan.
+2. Catat alasan penolakan.
+3. Simpan untuk talent pool.","JIKA TIDAK DIKERJAKAN: Citra brand buruk.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Alasan tidak tercatat.
+DICEK OLEH: Head Produksi — Cek komunikasi penolakan."
+GA: Arsipkan Kandidat,SUP9-10,GA,Rekrutmen Pengrajin,Aksi,B,SUP9-05,2,Umum,Setelah penolakan,"arsip, talent pool",,"1. Masukkan kandidat ke talent pool.
+2. Beri tag keterampilan.
+3. Tutup proses kandidat.","JIKA TIDAK DIKERJAKAN: Data kandidat hilang.
+JIKA DIKERJAKAN TAPI TIDAK SESUAI: Tag salah.
+DICEK OLEH: Head Produksi — Review talent pool."`;
+
+/* ============================================================= CSV parser */
+function parseCSV(text){
+  const rows=[]; let row=[], field='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else q=false; }
+      else field+=c;
+    } else {
+      if(c==='"') q=true;
+      else if(c===','){ row.push(field); field=''; }
+      else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else if(c==='\r'){}
+      else field+=c;
+    }
+  }
+  if(field.length||row.length){ row.push(field); rows.push(row); }
+  const head=rows.shift();
+  return rows.map(r=>{ const o={}; head.forEach((h,i)=>o[h]=(r[i]||'').trim()); return o; });
+}
+function toList(s){ return (s||'').split(',').map(x=>x.trim()).filter(Boolean); }
+
+/* ============================================================= build model */
+const CAT_META={
+  'FLOW ORDER':{cls:'p-order',short:'ORDER'},
+  'FLOW PRODUKSI':{cls:'p-prod',short:'PRODUKSI'},
+  'FLOW SUPPORT':{cls:'p-support',short:'SUPPORT'}
+};
+let SOPS=parseCSV(RAW_SOP).map(r=>({
+  title:r['Judul SOP'], id:r['ID'], role:r['Peran'], flow:r['Proses'], type:r['Tipe'],
+  path:r['Jalur'], parent:r['Induk (ID)'], order:+r['Urutan']||0, level:r['Level'],
+  when:r['Kapan Dipakai'], keywords:r['Kata Kunci'], branchTo:r['Cabang Ke'],
+  steps:(r['Langkah']||'').split('\n').map(s=>s.replace(/^\d+\.\s*/,'').trim()).filter(Boolean),
+  audit:parseAudit(r['Mekanisme Audit'])
+}));
+function parseAudit(s){
+  const o={notDone:'',wrong:'',by:''}; (s||'').split('\n').forEach(l=>{
+    if(l.startsWith('JIKA TIDAK DIKERJAKAN:')) o.notDone=l.split(':').slice(1).join(':').trim();
+    else if(l.startsWith('JIKA DIKERJAKAN')) o.wrong=l.split(':').slice(1).join(':').trim();
+    else if(l.startsWith('DICEK OLEH:')) o.by=l.split(':').slice(1).join(':').trim();
+  }); return o;
+}
+let FLOWS=parseCSV(RAW_PROSES).map(r=>({
+  name:r['Nama Flow'], category:r['Kategori'], type:r['Tipe Flow'], purpose:r['Tujuan'],
+  scope:r['Ruang Lingkup'], roles:toList(r['Peran Terlibat']), day:r['Hari'],
+  ordExt:+r['Urutan Extensive'], ordBiz:+r['Urutan Bisnis'], keywords:r['Kata Kunci'],
+  next:r['Lanjut Ke'], status:'Aktif', owner:'—', version:'v1.0', fresh:false
+}));
+function sopsOf(flow){ return SOPS.filter(s=>s.flow===flow).sort((a,b)=>{
+  if(a.path===b.path) return a.order-b.order; return a.path==='Utama'?-1:1; }); }
+function flowByName(n){ return FLOWS.find(f=>f.name===n); }
+function allRoles(){ const set=new Set(); SOPS.forEach(s=>set.add(s.role)); return [...set].sort(); }
+
+/* ============================================================= state */
+const state={ persona:'management', role:'Sales/CS', view:'studio',
+  flow:null, sop:null, openSop:null, studioStage:0, quizFlow:'Inquiry & Penawaran',
+  quizAns:{}, quizDone:false, scores:[{who:'Rani (GA)',flow:'Pengadaan Bahan Baku',score:80,date:'kemarin'}],
+  done:{}, loop:{store:false,division:false,onboard:false,test:false,routine:false,retrieve:false} };
+
+/* ============================================================= helpers */
+const el=(h)=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstElementChild;};
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function pill(cls,txt){return `<span class="pill ${cls}">${txt}</span>`;}
+function catPill(c){return pill(CAT_META[c].cls,CAT_META[c].short);}
+function typePill(t){return t==='Bercabang'?pill('p-branch','⌥ Bercabang'):pill('p-linear','→ Linear');}
+
+function toast(title,body){
+  const t=el(`<div class="toast"><b>${title}</b><small>${body}</small></div>`);
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>{t.style.transition='.4s';t.style.opacity='0';setTimeout(()=>t.remove(),400)},4200);
+}
+
+/* ============================================================= NAV */
+const NAV=[
+  {grp:'Alur Kerja'},
+  {id:'studio',ico:'✨',label:'AI Studio — Susun Flow',mgmtOnly:true},
+  {id:'division',ico:'🗂',label:'Division Flow',tag:'Mgmt',mgmtOnly:true},
+  {id:'onboard',ico:'🎓',label:'Onboarding',tag:'Staff'},
+  {grp:'Operasi Harian'},
+  {id:'routine',ico:'☑️',label:'Daily Routines'},
+  {id:'test',ico:'📝',label:'Post-Test & Skor'},
+  {id:'ai',ico:'🤖',label:'AI Retrieval'},
+  {grp:'Referensi'},
+  {id:'schema',ico:'🧩',label:'Skema Standar'}
+];
+function renderNav(){
+  const n=document.getElementById('nav'); n.innerHTML='';
+  NAV.forEach(item=>{
+    if(item.grp){ n.appendChild(el(`<div class="grp">${item.grp}</div>`)); return; }
+    if(item.mgmtOnly && state.persona==='staff') return;
+    const b=el(`<button data-v="${item.id}" class="${state.view===item.id?'on':''}">
+      <span class="ico">${item.ico}</span><span>${item.label}</span>${item.tag?`<span class="tag">${item.tag}</span>`:''}</button>`);
+    b.onclick=()=>{ state.view=item.id; state.flow=null; state.sop=null; render(); };
+    n.appendChild(b);
+  });
+}
+
+/* ============================================================= VIEWS */
+function render(){
+  // Staff: hide mgmt-only sections. Allow reading a flow's detail when drilled in from Onboarding.
+  if(state.persona==='staff' && (NAV.find(i=>i.id===state.view)||{}).mgmtOnly && !(state.view==='division'&&state.flow)){ state.view='onboard'; state.flow=null; }
+  renderNav();
+  document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.p===state.persona));
+  document.getElementById('rolepick').style.display=state.persona==='staff'?'block':'none';
+  const m=document.getElementById('main');
+  const v=state.view;
+  let html='';
+  if(v==='studio') html=viewStudio();
+  else if(v==='division') html=state.flow?viewFlowDetail():viewDivision();
+  else if(v==='onboard') html=viewOnboard();
+  else if(v==='routine') html=viewRoutine();
+  else if(v==='test') html=viewTest();
+  else if(v==='ai') html=viewAI();
+  else if(v==='schema') html=viewSchema();
+  m.innerHTML=`<div class="wrap">${html}</div>`;
+  m.scrollTop=0;
+  wire();
+}
+
+/* ---- 1. AI STUDIO (scripted) ---- */
+const STUDIO_CHAT=[
+  {who:'Andi (Head Sales)',me:false,txt:'Kita sering kececer pas klien minta retur. Belum ada alurnya sama sekali.'},
+  {who:'Sesar',me:true,txt:'Oke coba kita rapikan. Retur itu mulai dari mana sampai mana?'},
+  {who:'Andi (Head Sales)',me:false,txt:'Dari klien komplain barang cacat, CS verifikasi, kalau valid GA jemput barang, produksi cek, terus Finance proses refund atau kita reproduksi.'},
+  {who:'Sesar',me:true,txt:'Ada titik keputusannya dong — refund vs reproduksi?'},
+  {who:'Andi (Head Sales)',me:false,txt:'Iya betul. Head Sales yang mutusin berdasarkan hasil cek produksi.'}
+];
+const STUDIO_RESULT={
+  name:'Penanganan Retur & Refund', category:'FLOW ORDER', type:'Bercabang',
+  purpose:'Menangani permintaan retur klien dari verifikasi hingga keputusan refund atau reproduksi.',
+  scope:'Dari komplain retur diterima sampai refund cair / order reproduksi dibuka. Termasuk keputusan refund vs reproduksi.',
+  roles:['Sales/CS','GA','Head Produksi','Finance','Head Sales'],
+  day:'Hari 3', keywords:'retur, refund, reproduksi, komplain, garansi, cacat', next:'Pemesanan Bespoke',
+  sops:[
+    {title:'Sales/CS: Verifikasi Komplain Retur',id:'ORD10-01',role:'Sales/CS',type:'Aksi',path:'Utama',order:1,when:'Saat klien ajukan retur',
+     steps:['Terima & catat detail komplain retur.','Minta foto/bukti kondisi produk.','Cek vs syarat garansi.'],
+     audit:{notDone:'Retur valid tertolak / retur nakal lolos.',wrong:'Salah nilai keabsahan retur.',by:'Head Sales — Audit tiket retur harian.'}},
+    {title:'GA: Jemput & Terima Barang Retur',id:'ORD10-02',role:'GA',type:'Aksi',path:'Utama',order:2,when:'Bila retur disetujui verifikasi',
+     steps:['Koordinasi penjemputan barang.','Terima & catat kondisi barang masuk.','Serahkan ke produksi untuk pengecekan.'],
+     audit:{notDone:'Barang retur hilang jejak.',wrong:'Kondisi barang salah catat.',by:'Head Operasional — Cek log barang retur.'}},
+    {title:'Head Produksi: Cek Penyebab Cacat',id:'ORD10-03',role:'Head Produksi',type:'Aksi',path:'Utama',order:3,when:'Setelah barang diterima',
+     steps:['Periksa produk & tentukan penyebab.','Nilai apakah bisa diperbaiki/reproduksi.','Catat rekomendasi.'],
+     audit:{notDone:'Akar masalah tak diketahui, berulang.',wrong:'Salah diagnosa cacat.',by:'Head Operasional — Audit temuan cacat.'}},
+    {title:'KEPUTUSAN: Refund atau Reproduksi?',id:'ORD10-04',role:'Head Sales',type:'Keputusan',path:'Utama',order:4,when:'Setelah cek produksi',
+     branchTo:'Jalur A (Refund); Jalur B (Reproduksi)',
+     steps:['Tinjau rekomendasi produksi & nilai order.','Bila REFUND -> Jalur A.','Bila REPRODUKSI -> Jalur B.'],
+     audit:{notDone:'Retur menggantung, klien kecewa.',wrong:'Keputusan tak sesuai kebijakan.',by:'Head Sales — Audit keputusan retur.'}},
+    {title:'Finance: Proses Refund',id:'ORD10-05',role:'Finance',type:'Aksi',path:'A',parent:'ORD10-04',order:1,when:'Bila diputuskan refund',
+     steps:['Hitung nominal refund sesuai kebijakan.','Minta approval Head Finance.','Transfer & simpan bukti.'],
+     audit:{notDone:'Refund tertunda -> reputasi rusak.',wrong:'Salah nominal refund.',by:'Head Finance — Rekonsiliasi refund.'}},
+    {title:'Head Produksi: Buka Order Reproduksi',id:'ORD10-06',role:'Head Produksi',type:'Keputusan',path:'B',parent:'ORD10-04',order:1,when:'Bila diputuskan reproduksi',
+     branchTo:'LANJUT KE: Pemesanan Bespoke',
+     steps:['Buat order reproduksi dari spesifikasi lama.','Prioritaskan jadwal produksi.','LANJUT KE proses "Pemesanan Bespoke".'],
+     audit:{notDone:'Reproduksi tak terjadwal.',wrong:'Spesifikasi reproduksi salah.',by:'Head Produksi — Cek order reproduksi.'}}
+  ]
+};
+function viewStudio(){
+  const s=state.studioStage;
+  let chat=STUDIO_CHAT.map(m=>msgHTML(m)).join('');
+  if(s>=1) chat+=msgHTML({who:'AI Asisten',ai:true,txt:'Paham. Diskusi ini aku strukturkan jadi <b>Project Output</b> sesuai template standar perusahaan — 1 flow bercabang, 6 SOP, lengkap dengan langkah, audit, dan sambungan ke proses lain. Klik <b>Strukturkan</b> untuk lihat drafnya.'});
+  let tmpl = s>=2 ? studioTemplateHTML() : '';
+  let action = s===0
+    ? `<button class="btn pri" id="studioGo">✨ Bantu strukturkan diskusi ini</button>`
+    : s===1 ? `<button class="btn pri" id="studioStruct">📐 Strukturkan jadi Project Output</button>`
+    : s===2 ? `<div style="display:flex;gap:10px;align-items:center"><button class="btn pri" id="studioStore">💾 Simpan ke Lemari Proses</button><span class="muted">Sekali disimpan, seluruh sistem ikut ter-update.</span></div>`
+    : `<div class="note" style="border-left-color:var(--ok)">✅ <b>${STUDIO_RESULT.name}</b> tersimpan sebagai flow ke-${FLOWS.length}. Buka <a class="link" data-go="division">Division Flow</a>, <a class="link" data-go="onboard">Onboarding</a>, <a class="link" data-go="routine">Daily Routines</a>, atau <a class="link" data-go="test">Post-Test</a> — semuanya sudah otomatis memuat flow ini.</div>`;
+  return `
+   <div class="crumb">AI Studio</div>
+   <h1>✨ Susun Flow dari Diskusi Mentah</h1>
+   <p class="lead">Poin #1 — AI mendampingi tim mengubah obrolan mentah menjadi <b>project output</b> yang rapi sesuai template standar perusahaan dan siap disimpan. (Panel AI = skrip demo; mesin AI aslinya sudah terbukti di bot Telegram.)</p>
+   <div class="chat">
+     <div class="chat-h"><span class="dot"></span> Ruang diskusi · #retur-refund · AI aktif</div>
+     <div class="chat-b">${chat}${s===1?'':''}</div>
+   </div>
+   ${tmpl}
+   <div style="margin-top:18px">${action}</div>
+   ${loopBar()}
+  `;
+}
+function msgHTML(m){
+  return `<div class="msg ${m.me?'me':''}">
+    <div class="av ${m.ai?'ai':'u'}">${m.ai?'AI':(m.me?'S':(m.who[0]))}</div>
+    <div><div class="who">${m.who}</div><div class="bub">${m.txt}</div></div></div>`;
+}
+function studioTemplateHTML(){
+  const r=STUDIO_RESULT;
+  const f=(k,v)=>`<div class="tfield"><div class="tk">${k}</div><div class="tv">${v}</div></div>`;
+  return `<div class="template">
+    <div class="template-h"><b>📄 Project Output — Template Standar</b> ${pill('p-ghost','Draft dari AI')}</div>
+    ${f('Nama Proses',esc(r.name))}
+    ${f('Kategori',catPill(r.category))}
+    ${f('Tipe',typePill(r.type))}
+    ${f('Tujuan',esc(r.purpose))}
+    ${f('Ruang Lingkup',esc(r.scope))}
+    ${f('Peran Terlibat',r.roles.map(x=>pill('p-ghost',esc(x))).join(' '))}
+    ${f('Lanjut Ke',pill('p-order','→ '+esc(r.next)))}
+    ${f('Kata Kunci',esc(r.keywords))}
+    ${f('SOP / Langkah',`<b>${r.sops.length} SOP</b> terstruktur (termasuk 1 titik keputusan + 2 jalur cabang), lengkap langkah & mekanisme audit.`)}
+  </div>`;
+}
+
+/* ---- 2. DIVISION FLOW (management map) ---- */
+function viewDivision(){
+  const cats=['FLOW ORDER','FLOW PRODUKSI','FLOW SUPPORT'];
+  const cols=cats.map(cat=>{
+    const list=FLOWS.filter(f=>f.category===cat).sort((a,b)=>a.ordBiz-b.ordBiz);
+    return `<div><div class="col-head">${catPill(cat)} <span class="muted">${list.length} flow</span></div>
+      ${list.map(fcardHTML).join('')}</div>`;
+  }).join('');
+  return `
+   <div class="crumb">Division Flow</div>
+   <h1>🗂 Division Flow</h1>
+   <p class="lead">Poin #2 — sudut pandang <b>Management</b>: seluruh proses divisi dalam 3 kategori, terhubung lewat "Lanjut Ke". Klik kartu untuk masuk ke SOP-nya (layering ala Notion: Proses → SOP → Langkah & Audit).</p>
+   <div class="board">${cols}</div>
+   ${loopBar()}
+  `;
+}
+function fcardHTML(f){
+  const sc=sopsOf(f.name).length;
+  return `<div class="fcard ${f.fresh?'fresh':''}" data-flow="${esc(f.name)}">
+    <div class="ftitle"><span>${esc(f.name)}</span></div>
+    <div class="fmeta">${typePill(f.type)} ${pill('p-ghost',f.day)} ${pill('p-ghost',sc+' SOP')} ${f.fresh?pill('p-open','BARU'):''}</div>
+    <div class="fpurpose">${esc(f.purpose)}</div>
+    ${f.next?`<div class="fchain">→ lanjut ke <b>${esc(f.next)}</b></div>`:`<div class="fchain muted">titik akhir alur</div>`}
+  </div>`;
+}
+function viewFlowDetail(){
+  const f=state.flow; const sops=sopsOf(f.name);
+  const mains=sops.filter(s=>s.path==='Utama'||!s.parent);
+  return `
+   <div class="crumb"><a data-go="${state.persona==='staff'?'onboard':'division'}">${state.persona==='staff'?'Onboarding':'Division Flow'}</a> › ${catPill(f.category)} ${esc(f.name)}</div>
+   <h1>${esc(f.name)}</h1>
+   <div class="fmeta" style="display:flex;gap:6px;margin:6px 0 4px">${catPill(f.category)} ${typePill(f.type)} ${pill('p-ghost',f.day)} ${pill('p-ghost',f.version)}</div>
+   <div class="kv">
+     <div class="k">Tujuan</div><div class="v">${esc(f.purpose)}</div>
+     <div class="k">Ruang Lingkup</div><div class="v">${esc(f.scope)}</div>
+     <div class="k">Peran Terlibat</div><div class="v">${f.roles.map(r=>pill('p-ghost',esc(r))).join(' ')}</div>
+     <div class="k">Lanjut Ke</div><div class="v">${f.next?pill('p-order','→ '+esc(f.next)):'<span class="muted">—</span>'}</div>
+     <div class="k">Kata Kunci</div><div class="v muted">${esc(f.keywords)}</div>
+   </div>
+   <h2>Tahapan SOP <span class="muted" style="font-weight:400">(${sops.length})</span></h2>
+   <div class="steps">${mains.map(s=>sopRowHTML(s,sops)).join('')}</div>
+   ${loopBar()}
+  `;
+}
+function sopRowHTML(s,all,child){
+  const kids=all.filter(k=>k.parent===s.id);
+  const locked=isLocked(s);
+  const open=state.openSop===s.id;
+  const dec=s.type==='Keputusan';
+  let row=`<div class="srow ${child?'child':''} ${dec?'decision':''}" data-sop="${s.id}">
+    <div class="snum">${dec?'◆':s.order}</div>
+    <div class="sbody">
+      <div class="st">${esc(s.title)} ${locked?pill('p-lock','🔒 Rahasia'):''} ${kids.length?`<span class="toggle">${open?'▾':'▸'} ${kids.length} cabang</span>`:''}</div>
+      <div class="sm"><span>${esc(s.id)}</span><span>· ${esc(s.role)}</span>${s.path!=='Utama'&&s.path?`<span>· Jalur ${esc(s.path)}</span>`:''}<span>· ${esc(s.when)}</span></div>
+    </div></div>`;
+  if(open){
+    row += locked ? `<div class="sdetail"><div class="locked">🔒 <b>Detail dikunci — hanya Finance.</b><br><span style="color:var(--ink-soft);font-size:13px">Kamu login sebagai <b>${esc(state.role)}</b>. Poin #9 brief: SOP rahasia (SUP7-08) tak bisa diakses selain Finance.</span></div></div>`
+      : sopDetailHTML(s);
+  }
+  if(open||child){ kids.forEach(k=>{ row+=sopRowHTML(k,all,true); }); }
+  return row;
+}
+function isLocked(s){ return s.level==='Rahasia' && !(state.persona==='staff'&&state.role==='Finance') && state.persona!=='management'; }
+function sopDetailHTML(s){
+  return `<div class="sdetail">
+    <h4>Langkah-langkah</h4>
+    <ol>${s.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>
+    ${s.branchTo?`<h4>Percabangan</h4><div>${pill('p-branch',esc(s.branchTo))}</div>`:''}
+    <h4>Mekanisme Audit</h4>
+    <div class="audit">
+      <div><b>Jika tidak dikerjakan:</b> ${esc(s.audit.notDone)}</div>
+      <div><b>Jika tidak sesuai:</b> ${esc(s.audit.wrong)}</div>
+      <div><b>Dicek oleh:</b> ${esc(s.audit.by)}</div>
+    </div>
+  </div>`;
+}
+
+/* ---- 3. ONBOARDING (user/staff view) ---- */
+function viewOnboard(){
+  const role=state.persona==='staff'?state.role:null;
+  let flows=FLOWS.slice();
+  if(role) flows=flows.filter(f=>f.roles.includes(role)||sopsOf(f.name).some(s=>s.role===role));
+  // group by Hari
+  const days={}; flows.forEach(f=>{ (days[f.day]=days[f.day]||[]).push(f); });
+  const order=Object.keys(days).sort();
+  const body=order.map(d=>`<div class="day"><div class="day-h"><span>${d}</span><span class="muted">${days[d].length} flow</span></div>
+    <div class="day-b">${days[d].sort((a,b)=>a.ordExt-b.ordExt).map(f=>`
+      <div class="obrow" data-flow="${esc(f.name)}"><span class="ico">📄</span>
+      <span style="flex:1"><b>${esc(f.name)}</b> <span class="muted">— ${esc(f.purpose)}</span></span>
+      ${catPill(f.category)}</div>`).join('')}</div></div>`).join('');
+  return `
+   <div class="crumb">Onboarding</div>
+   <h1>🎓 Onboarding Flow</h1>
+   <p class="lead">Poin #3 — sudut pandang <b>Staff</b>: jadwal belajar per hari, hanya flow yang relevan dengan peran. ${role?`Menampilkan flow untuk <b>${esc(role)}</b>.`:'Ganti ke persona <b>Staff</b> (kiri atas) untuk memfilter per peran.'}</p>
+   ${body||'<div class="note">Tidak ada flow untuk peran ini.</div>'}
+   ${loopBar()}
+  `;
+}
+
+/* ---- 4. DAILY ROUTINES (derived) ---- */
+function routineRows(){
+  // derive from SOPs: each SOP = a task for its role; audit "by" = auditor routine
+  const role=state.persona==='staff'?state.role:null;
+  let rows=SOPS.map(s=>({role:s.role,task:s.title,flow:s.flow,trigger:s.when,type:'Kerjakan',fresh:isFreshFlow(s.flow)}));
+  // auditor routines
+  const seen=new Set();
+  SOPS.forEach(s=>{ const by=(s.audit.by||'').split('—')[0].trim(); if(by&&!seen.has(by+s.flow)){seen.add(by+s.flow);
+    rows.push({role:by,task:'Audit: '+s.flow,flow:s.flow,trigger:(s.audit.by.split('—')[1]||'').trim()||'berkala',type:'Audit',fresh:isFreshFlow(s.flow)});}});
+  if(role) rows=rows.filter(r=>r.role===role);
+  // show a manageable slice: fresh first
+  rows.sort((a,b)=>(b.fresh?1:0)-(a.fresh?1:0));
+  return rows;
+}
+function isFreshFlow(name){ const f=flowByName(name); return f&&f.fresh; }
+function viewRoutine(){
+  const role=state.persona==='staff'?state.role:null;
+  const rows=routineRows();
+  const shown=rows.slice(0,role?60:22);
+  const trs=shown.map((r,i)=>{
+    const key=r.role+'|'+r.task; const done=state.done[key];
+    return `<tr class="${r.fresh?'fresh':''}">
+      <td><span class="chk ${done?'done':''}" data-done="${esc(key)}"></span></td>
+      <td class="${done?'done':''}">${esc(r.task)} ${r.fresh?pill('p-open','flow baru'):''}</td>
+      <td>${esc(r.role)}</td>
+      <td>${r.type==='Audit'?pill('p-support','Audit'):pill('p-ghost','Kerjakan')}</td>
+      <td class="muted">${esc(r.trigger)}</td>
+    </tr>`;}).join('');
+  return `
+   <div class="crumb">Daily Routines</div>
+   <h1>☑️ Daily Routines</h1>
+   <p class="lead">Poin #5 — rutinitas & to-do <b>otomatis terbentuk dari flow yang tersimpan</b>. Setiap SOP jadi tugas bagi perannya; setiap "Dicek oleh" jadi rutinitas auditor. Simpan flow baru di AI Studio → baris baru langsung muncul di sini.</p>
+   ${role?`<div class="note">Menampilkan rutinitas untuk <b>${esc(role)}</b> (${rows.length} item).</div>`:`<div class="note">Persona <b>Management</b>: melihat gabungan seluruh peran (${rows.length} item derivatif). Ganti ke Staff untuk fokus per peran.</div>`}
+   <div class="card"><table>
+     <thead><tr><th></th><th>Tugas / Rutinitas</th><th>Peran</th><th>Jenis</th><th>Pemicu</th></tr></thead>
+     <tbody>${trs}</tbody></table></div>
+   ${rows.length>shown.length?`<p class="muted" style="margin-top:8px">+${rows.length-shown.length} baris lainnya…</p>`:''}
+   ${loopBar()}
+  `;
+}
+
+/* ---- 5/4 POST-TEST ---- */
+function buildQuiz(flowName){
+  const sops=sopsOf(flowName).filter(s=>s.steps.length>=2&&s.type!=='Keputusan');
+  const pick=sops.slice(0,3);
+  return pick.map((s,qi)=>{
+    // Q: what is step 1 of this SOP? options = step1 of others
+    const correct=s.steps[0];
+    const distract=sops.filter(x=>x.id!==s.id).map(x=>x.steps[0]).filter(Boolean);
+    const opts=shuffle([correct,...distract.slice(0,2)]);
+    return {q:`Pada SOP "<b>${esc(s.title)}</b>" (${esc(s.role)}), apa langkah pertamanya?`,opts,correct};
+  });
+}
+function shuffle(a){ // deterministic-ish, no Math.random need
+  const r=a.slice(); for(let i=r.length-1;i>0;i--){const j=(i*7+3)%(i+1);[r[i],r[j]]=[r[j],r[i]];} return r;
+}
+let QUIZ=[];
+function viewTest(){
+  QUIZ=buildQuiz(state.quizFlow);
+  const opts=FLOWS.map(f=>`<option ${f.name===state.quizFlow?'selected':''}>${esc(f.name)}</option>`).join('');
+  let body;
+  if(!state.quizDone){
+    body=QUIZ.map((q,qi)=>`<div class="q"><div class="qq">${qi+1}. ${q.q}</div>
+      ${q.opts.map((o,oi)=>`<button class="opt ${state.quizAns[qi]===o?'sel':''}" data-q="${qi}" data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div>`).join('')
+      +`<button class="btn pri" id="quizSubmit" ${Object.keys(state.quizAns).length<QUIZ.length?'disabled':''}>Kumpulkan & Simpan Skor</button>`;
+  } else {
+    const correct=QUIZ.filter((q,qi)=>state.quizAns[qi]===q.correct).length;
+    const score=Math.round(correct/QUIZ.length*100);
+    body=`<div class="card" style="padding:24px;text-align:center;margin-bottom:16px">
+      <div class="scorebig" style="color:${score>=67?'var(--ok)':'var(--lock)'}">${score}</div>
+      <div class="muted">${correct}/${QUIZ.length} benar · skor tersimpan ke catatan</div></div>
+      ${QUIZ.map((q,qi)=>`<div class="q"><div class="qq">${qi+1}. ${q.q}</div>
+        ${q.opts.map(o=>{let c=o===q.correct?'correct':(state.quizAns[qi]===o?'wrong':'');return `<div class="opt ${c}">${esc(o)}${o===q.correct?' ✓':''}</div>`}).join('')}</div>`).join('')}
+      <button class="btn" id="quizReset">Ulangi</button>`;
+  }
+  const scoreTable=`<h2>📊 Skor Tersimpan</h2>
+    <div class="card"><table><thead><tr><th>Peserta</th><th>Flow</th><th>Skor</th><th>Waktu</th></tr></thead>
+    <tbody>${state.scores.map(s=>`<tr><td>${esc(s.who)}</td><td>${esc(s.flow)}</td><td><b>${s.score}</b></td><td class="muted">${esc(s.date)}</td></tr>`).join('')}</tbody></table></div>`;
+  return `
+   <div class="crumb">Post-Test & Skor</div>
+   <h1>📝 Post-Test</h1>
+   <p class="lead">Poin #4 — setelah membaca sebuah flow, staff mengerjakan post-test yang <b>digenerate dari langkah SOP flow itu</b>, lalu skornya disimpan. (Ini persis yang sudah jalan di bot Telegram — di sini ditampilkan inline.)</p>
+   <div style="margin-bottom:14px"><label class="muted">Flow diuji: </label>
+     <select id="quizFlow" style="padding:7px 10px;border:1px solid var(--line);border-radius:7px">${opts}</select></div>
+   ${body}
+   ${scoreTable}
+   ${loopBar()}
+  `;
+}
+
+/* ---- 6. AI RETRIEVAL (scripted + real keyword search) ---- */
+const CANNED=[
+  {q:'Siapa yang harus dihubungi kalau vendor belum dibayar?',
+   a:'Pembayaran vendor ditangani oleh <b>Finance</b> lewat SOP <b>SUP7-08 · Finance: Bayar Vendor via KlikBCA</b> (Level: Rahasia). Alurnya: barang diterima & PO cocok → Finance input rekening + nominal → <b>approval Head Finance</b> → simpan bukti & tandai "Lunas". Kalau belum dibayar, eskalasi ke <b>Head Finance</b> (dual-approval & rekonsiliasi harian).',
+   cites:['SUP7-08','SUP7-09']},
+  {q:'Apa yang terjadi kalau kain gagal QC di tengah proses membatik?',
+   a:'Di flow <b>Proses Membatik</b> ada titik keputusan <b>PRD6-05 · KEPUTUSAN: Lolos QC Tengah?</b>. Bila <b>CACAT → Jalur B (Rework)</b>: pengrajin <b>Identifikasi Cacat (PRD6-09)</b> lalu <b>Lakukan Rework (PRD6-10)</b>, kemudian <b>kembali ke keputusan QC Tengah</b> untuk dicek ulang. Bila lolos → Jalur A lanjut ke pewarnaan kedua & finishing.',
+   cites:['PRD6-05','PRD6-09','PRD6-10']},
+  {q:'Proses mana yang menyambung ke Persiapan Kain & Desain?',
+   a:'Flow <b>Pemesanan Bespoke</b> menyambung ke <b>Persiapan Kain & Desain</b>. Titik sambungnya SOP <b>ORD3-09 · Head Produksi: Kunci Order & Lanjut Produksi</b> (Jalur A) — setelah DP lunas & spesifikasi final, order di-set "Siap Produksi" lalu LANJUT KE Persiapan Kain & Desain.',
+   cites:['ORD3-09']}
+];
+function viewAI(){
+  return `
+   <div class="crumb">AI Retrieval</div>
+   <h1>🤖 AI Retrieval</h1>
+   <p class="lead">Poin #6 — tanya apa saja, AI menjawab dengan menarik data dari flow/SOP yang tersimpan (Kata Kunci + relasi). Jawaban selalu <b>menyebut ID SOP sumbernya</b> supaya bisa ditelusuri.</p>
+   <div class="prompts">${CANNED.map((c,i)=>`<button class="chip" data-canned="${i}">${esc(c.q)}</button>`).join('')}</div>
+   <div class="chat" style="margin-top:8px">
+     <div class="chat-h"><span class="dot"></span> Asisten AI · membaca 9 flow / ${SOPS.length} SOP</div>
+     <div class="chat-b" id="aiChat">
+       ${msgHTML({who:'AI Asisten',ai:true,txt:'Halo — tanyakan apa saja soal SOP & alur kerja. Coba salah satu contoh di atas, atau ketik kata kunci (mis. "packing", "refund", "canting").'})}
+     </div>
+     <div class="chat-f"><input id="aiInput" placeholder="Tanya sesuatu… lalu Enter"><button class="btn pri" id="aiSend">Kirim</button></div>
+   </div>
+   ${loopBar()}
+  `;
+}
+function aiAnswer(query){
+  const chat=document.getElementById('aiChat');
+  chat.appendChild(el(msgHTML({who:state.persona==='staff'?state.role:'Management',me:true,txt:esc(query)})));
+  const typing=el(`<div class="msg"><div class="av ai">AI</div><div><div class="who">AI Asisten</div><div class="bub typing"><span></span><span></span><span></span></div></div></div>`);
+  chat.appendChild(typing); chat.scrollTop=chat.scrollHeight;
+  const canned=CANNED.find(c=>c.q.toLowerCase()===query.toLowerCase());
+  let ansHTML,cites;
+  if(canned){ ansHTML=canned.a; cites=canned.cites; }
+  else {
+    const q=query.toLowerCase();
+    const hits=SOPS.filter(s=>(s.keywords+' '+s.title+' '+s.flow).toLowerCase().includes(q)).slice(0,4);
+    if(hits.length){ ansHTML=`Dari pencarian kata kunci "<b>${esc(query)}</b>", aku menemukan ${hits.length} SOP relevan di sistem. Ringkasannya: ${hits.map(h=>`<b>${esc(h.title)}</b> (peran ${esc(h.role)}, flow ${esc(h.flow)})`).join('; ')}.`; cites=hits.map(h=>h.id); }
+    else { ansHTML=`Aku belum menemukan SOP yang cocok dengan "<b>${esc(query)}</b>". Coba kata kunci lain seperti nama proses, peran, atau istilah teknis (canting, ekspedisi, DP, vendor).`; cites=[]; }
+  }
+  setTimeout(()=>{
+    typing.remove();
+    const citeHTML=(cites||[]).map(id=>{const s=SOPS.find(x=>x.id===id);return s?`<div class="cite" data-cite="${id}">📄 <b>${esc(id)}</b> · ${esc(s.title)} <span class="muted">— buka di ${esc(s.flow)}</span></div>`:'';}).join('');
+    chat.appendChild(el(`<div class="msg"><div class="av ai">AI</div><div style="max-width:82%"><div class="who">AI Asisten</div><div class="bub">${ansHTML}${citeHTML?`<div style="margin-top:8px">${citeHTML}</div>`:''}</div></div></div>`));
+    chat.scrollTop=chat.scrollHeight;
+    litLoop('retrieve');
+    wire();
+  },650);
+}
+
+/* ---- SCHEMA ---- */
+function viewSchema(){
+  const row=(f,t,d)=>`<tr><td><code>${f}</code></td><td>${t}</td><td class="muted">${d}</td></tr>`;
+  return `
+   <div class="crumb">Referensi</div>
+   <h1>🧩 Skema Standar (disederhanakan)</h1>
+   <p class="lead">Versi ringkas dari "Project Output" di ROAD MAP.pdf — cukup untuk membuktikan seluruh data saling terhubung. Field kaya (sponsor, changelog, escalation, FAQ, dll.) sengaja ditunda.</p>
+   <h2>Entitas: Flow (Proses)</h2>
+   <div class="card"><table><thead><tr><th>Field</th><th>Tipe</th><th>Peran dalam sistem</th></tr></thead><tbody>
+   ${row('name','text','judul proses')}
+   ${row('category','select','FLOW ORDER / PRODUKSI / SUPPORT — untuk Division Flow')}
+   ${row('type','select','Linear / Bercabang')}
+   ${row('purpose / scope','text','ditampilkan di header flow')}
+   ${row('roles[]','multi','filter Onboarding & sumber Daily Routines')}
+   ${row('day','select','pengelompokan Onboarding')}
+   ${row('next (Lanjut Ke)','relation','menyambung antar-flow (interkoneksi)')}
+   ${row('keywords','text','bahan AI Retrieval')}
+   </tbody></table></div>
+   <h2>Entitas: SOP (di dalam Flow)</h2>
+   <div class="card"><table><thead><tr><th>Field</th><th>Tipe</th><th>Peran dalam sistem</th></tr></thead><tbody>
+   ${row('id','text','identitas & sitiran AI')}
+   ${row('role','select','pemilik tugas → Daily Routines')}
+   ${row('type','select','Aksi / Keputusan (titik cabang)')}
+   ${row('path / parent','relation','pohon percabangan (sub-items)')}
+   ${row('level','select','Umum / Rahasia — kontrol akses')}
+   ${row('steps[]','list','isi post-test & panduan kerja')}
+   ${row('audit{}','object','jika-tidak-dikerjakan / tidak-sesuai / dicek-oleh → rutinitas auditor')}
+   </tbody></table></div>
+   <div class="note">Satu perubahan data di sini otomatis menjalar ke Division Flow, Onboarding, Daily Routines, Post-Test, dan AI Retrieval. Itulah inti buktinya: <b>kelola data dengan benar & saling terhubung → sistem operasional yang bisa berputar sendiri.</b></div>
+  `;
+}
+
+/* ---- loop bar (shows the interconnection lighting up) ---- */
+function loopBar(){
+  const L=state.loop;
+  const item=(k,t)=>`<span class="${L[k]?'lit':''}">${L[k]?'✓ ':''}${t}</span>`;
+  return `<div style="margin-top:34px;padding-top:16px;border-top:1px solid var(--line-2)">
+    <div class="muted" style="font-size:12px;margin-bottom:4px">Loop sistem (menyala saat kamu memakai tiap bagian):</div>
+    <div class="loopbar">
+      ${item('store','1 · Flow disimpan (AI Studio)')}
+      ${item('division','2 · Division Flow')}
+      ${item('onboard','3 · Onboarding')}
+      ${item('test','4 · Post-Test')}
+      ${item('routine','5 · Daily Routines')}
+      ${item('retrieve','6 · AI Retrieval')}
+    </div></div>`;
+}
+function litLoop(k){ if(!state.loop[k]){ state.loop[k]=true; } }
+
+/* ============================================================= WIRING */
+function wire(){
+  // mark loop by current view
+  const map={studio:'store_none',division:'division',onboard:'onboard',routine:'routine',test:'test',ai:'retrieve'};
+  if(map[state.view]&&map[state.view]!=='store_none') litLoop(map[state.view]);
+
+  document.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{state.view=a.dataset.go;state.flow=null;render();});
+  document.querySelectorAll('[data-flow]').forEach(c=>c.onclick=()=>{state.flow=flowByName(c.dataset.flow);state.view='division'==state.view?'division':state.view; if(state.view==='onboard'){state.view='division';} state.openSop=null; render();});
+  // in onboard, clicking a flow should open division detail
+  document.querySelectorAll('.obrow[data-flow]').forEach(c=>c.onclick=()=>{state.flow=flowByName(c.dataset.flow);state.view='division';state.openSop=null;render();});
+
+  document.querySelectorAll('.srow[data-sop]').forEach(r=>r.onclick=()=>{state.openSop=state.openSop===r.dataset.sop?null:r.dataset.sop;render();});
+
+  const go=document.getElementById('studioGo'); if(go) go.onclick=()=>{state.studioStage=1;render();};
+  const st=document.getElementById('studioStruct'); if(st) st.onclick=()=>{state.studioStage=2;render();};
+  const store=document.getElementById('studioStore'); if(store) store.onclick=storeFlow;
+
+  const qf=document.getElementById('quizFlow'); if(qf) qf.onchange=()=>{state.quizFlow=qf.value;state.quizAns={};state.quizDone=false;render();};
+  document.querySelectorAll('.opt[data-q]').forEach(o=>o.onclick=()=>{state.quizAns[+o.dataset.q]=o.dataset.o;render();});
+  const qs=document.getElementById('quizSubmit'); if(qs) qs.onclick=()=>{state.quizDone=true;
+    const correct=QUIZ.filter((q,qi)=>state.quizAns[qi]===q.correct).length;const score=Math.round(correct/QUIZ.length*100);
+    state.scores.unshift({who:(state.persona==='staff'?state.role:'Demo User'),flow:state.quizFlow,score,date:'baru saja'});
+    litLoop('test'); toast('Skor tersimpan','Post-test '+state.quizFlow+' → '+score+'. Muncul di tabel skor & rekap management.'); render();};
+  const qr=document.getElementById('quizReset'); if(qr) qr.onclick=()=>{state.quizAns={};state.quizDone=false;render();};
+
+  document.querySelectorAll('[data-canned]').forEach(c=>c.onclick=()=>aiAnswer(CANNED[+c.dataset.canned].q));
+  const ai=document.getElementById('aiSend'),inp=document.getElementById('aiInput');
+  if(ai) ai.onclick=()=>{if(inp.value.trim()){const v=inp.value;inp.value='';aiAnswer(v);}};
+  if(inp) inp.onkeydown=e=>{if(e.key==='Enter'&&inp.value.trim()){const v=inp.value;inp.value='';aiAnswer(v);}};
+  document.querySelectorAll('[data-cite]').forEach(c=>c.onclick=()=>{const s=SOPS.find(x=>x.id===c.dataset.cite);if(s){state.flow=flowByName(s.flow);state.view='division';state.openSop=s.id;render();}});
+
+  document.querySelectorAll('[data-done]').forEach(c=>c.onclick=()=>{const k=c.dataset.done;state.done[k]=!state.done[k];render();});
+}
+function storeFlow(){
+  const r=STUDIO_RESULT;
+  if(flowByName(r.name)){ state.studioStage=3; render(); return; }
+  FLOWS.push({name:r.name,category:r.category,type:r.type,purpose:r.purpose,scope:r.scope,roles:r.roles,
+    day:r.day,ordExt:99,ordBiz:99,keywords:r.keywords,next:r.next,status:'Aktif',owner:'AI Draft',version:'v1.0',fresh:true});
+  r.sops.forEach(s=>SOPS.push({title:s.title,id:s.id,role:s.role,flow:r.name,type:s.type,path:s.path||'Utama',
+    parent:s.parent||'',order:s.order,level:'Umum',when:s.when,keywords:'',branchTo:s.branchTo||'',steps:s.steps,audit:s.audit}));
+  state.studioStage=3; litLoop('store');
+  toast('✅ Flow tersimpan',`"${r.name}" masuk ke Lemari Proses. Division Flow, Onboarding, Daily Routines & Post-Test otomatis ter-update.`);
+  render();
+}
+
+/* ============================================================= boot */
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
+  state.persona=b.dataset.p; render();
+});
+const roleSel=document.getElementById('roleSel');
+allRoles().forEach(r=>roleSel.appendChild(el(`<option ${r==='Sales/CS'?'selected':''}>${esc(r)}</option>`)));
+roleSel.onchange=()=>{state.role=roleSel.value;render();};
+render();
+</script>
