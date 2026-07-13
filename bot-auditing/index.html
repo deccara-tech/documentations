@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="docs-styles.css" />
+</head>
+<body>
+<script>
+/* =====================================================================
+   USER GUIDE — non-technical. Edit only this DOCS_DATA object.
+   Template = docs-styles.css + docs-engine.js (shared, unchanged).
+   ===================================================================== */
+window.DOCS_DATA = {
+  project: "Audit Bot",
+  audience: "User Guide",
+  tagline: "Catat, perbaiki, dan tutup temuan audit langsung dari WhatsApp — tanpa aplikasi tambahan.",
+  repo: "https://github.com/deccara-tech/bot-auditing",
+  fallbackVersion: "v0.1.0",
+  crossLink: { href: "technical.html", label: "Technical Docs" },
+
+  sections: [
+    {
+      id:"start", nav:"Getting Started", title:"Getting Started", type:"html",
+      html:`
+        <div class="grid2">
+          <div class="card">
+            <h3>Apa ini?</h3>
+            <p>Asisten WhatsApp untuk audit. Kirim sebuah <b>form</b>, bot mencatat
+            temuan sebagai <b>Audit Case</b> dengan nomor <code>REF_AUDIT</code>,
+            lalu memandu perbaikan sampai temuan ditutup.</p>
+          </div>
+          <div class="card">
+            <h3>Sebelum mulai</h3>
+            <ul style="margin:0;padding-left:18px">
+              <li>Nomor kamu harus terdaftar dengan role yang sesuai.</li>
+              <li>Kirim pesan di grup WhatsApp yang diizinkan.</li>
+              <li>Ketik <kbd>!check</kbd> kapan saja untuk melihat akses kamu.</li>
+            </ul>
+          </div>
+        </div>
+        <h3>Alur singkat</h3>
+        <ol class="steps">
+          <li><b>Auditor kirim FORM AUDIT.</b> Bot membuat Audit Case dan memberi <code>REF_AUDIT</code>.</li>
+          <li><b>Yang diaudit menindaklanjuti.</b> Reply pesan audit dengan <b>FORM PERBAIKAN</b> lalu <b>FORM CONFIRMED</b>.</li>
+          <li><b>Reminder otomatis.</b> Selama masih pending, bot mengingatkan tiap hari jam 12:00 (lewati Minggu &amp; hari libur).</li>
+        </ol>`
+    },
+    {
+      id:"flow", nav:"How It Works", title:"How It Works", type:"diagrams",
+      items:[
+        { title:"Perjalanan sebuah Audit Case", code:`flowchart TD
+  A[Auditor kirim FORM AUDIT] --> B{Punya akses submit dan form lengkap?}
+  B -->|Tidak| X[Bot tolak dan sebut alasan]
+  B -->|Ya| C[Bot buat Audit Case dengan REF_AUDIT]
+  C --> D[Status perbaikan_required]
+  D --> E[Yang diaudit reply FORM PERBAIKAN]
+  E --> F[Status perbaikan_submitted]
+  F --> G[Reply FORM CONFIRMED]
+  G --> H[Status confirmed - selesai]
+  D --> I{Perlu batal?}
+  I -->|Superior atau auditor| J[FORM CANCEL AUDIT] --> K[Status cancelled]` },
+      ]
+    },
+    {
+      id:"try", nav:"Try It Live", title:"Try It Live", type:"demo",
+      intro:"Pilih situasi di bawah dan lihat persis apa yang kamu kirim dan balasan bot.",
+      cases:[
+        {
+          title:"Cek akses saya (!check)",
+          note:"Menampilkan nama dan izin kamu. Berguna kalau sesuatu tidak jalan.",
+          steps:[
+            {from:"user", text:"!check"},
+            {typing:900},
+            {from:"bot", text:"Hello, this is your bot access config:\n\nDisplay Name: Caesario Dito\nPhone: 6281332046077\n\nAccess:\n- Audit Submit: TRUE\n- Audit Review: TRUE\n- Audit Cancel: FALSE\n- Receive Reminder: TRUE"},
+          ]
+        },
+        {
+          title:"Buat Audit Case (FORM AUDIT)",
+          note:"Isi form dan kirim. Bot membalas dengan REF_AUDIT dan langkah opsional berikutnya.",
+          steps:[
+            {from:"user", text:"FORM AUDIT\nAUDITED: CR001\nCATEGORY: OPS\nCODE: C-102\nAUDITOR: AUD9\nNOTES: rak display tidak rapi"},
+            {typing:1400},
+            {from:"bot", text:"AUDIT CASE CREATED\nREF_AUDIT: AUD-2604-CR-0011\n\nDIVISION: CR\nAUDITED: CR001\nAUDITOR: AUD9\nCATEGORY: OPS\nCODE: C-102\nNOTES: rak display tidak rapi"},
+            {typing:800},
+            {from:"bot", text:"OPSIONAL NEXT STEP\n1. FORM PERBAIKAN\n2. FORM CONFIRMED\n\nContoh FORM PERBAIKAN (copy, lalu edit seperlunya):\nFORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
+          ]
+        },
+        {
+          title:"Kirim perbaikan (FORM PERBAIKAN)",
+          note:"Reply pesan audit sebelumnya. Hanya nomor yang diaudit yang boleh mengirim.",
+          steps:[
+            {from:"user", quote:"AUDIT CASE CREATED\nREF_AUDIT: AUD-2604-CR-0011", text:"FORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
+            {typing:1100},
+            {from:"bot", text:"PERBAIKAN TERCATAT\nREF_AUDIT: AUD-2604-CR-0011\nSTATUS: perbaikan_submitted"},
+          ]
+        },
+        {
+          title:"Konfirmasi selesai (FORM CONFIRMED)",
+          note:"Reply pesan audit lagi untuk menutup temuan.",
+          steps:[
+            {from:"user", quote:"AUDIT CASE CREATED\nREF_AUDIT: AUD-2604-CR-0011", text:"FORM CONFIRMED\nREF_AUDIT: AUD-2604-CR-0011"},
+            {typing:1100},
+            {from:"bot", text:"CONFIRMED TERCATAT\nREF_AUDIT: AUD-2604-CR-0011\nSTATUS: confirmed"},
+          ]
+        },
+        {
+          title:"Batalkan audit (FORM CANCEL AUDIT)",
+          note:"Hanya superior yang diaudit atau auditor yang boleh. Semua field harus cocok dengan REF_AUDIT.",
+          steps:[
+            {from:"user", text:"FORM CANCEL AUDIT\nREF_AUDIT: AUD-2604-CR-0011\nAUDITED: CR001\nCATEGORY: OPS\nCODE: C-102\nAPPROVED BY: SPVCR001\nCANCELLATION REASON: duplikat"},
+            {typing:1200},
+            {from:"bot", text:"AUDIT DICANCEL\nREF_AUDIT: AUD-2604-CR-0011\nSTATUS: cancelled"},
+          ]
+        },
+        {
+          title:"“Form tidak lengkap”",
+          note:"Bot menyebut field mana yang kurang. Perbaiki lalu kirim ulang.",
+          steps:[
+            {from:"user", text:"FORM AUDIT\nAUDITED: CR001"},
+            {typing:900},
+            {from:"bot", text:"Form audit tidak lengkap: CATEGORY, AUDITOR"},
+          ]
+        },
+        {
+          title:"“Tidak punya akses”",
+          note:"Minta admin memberi role yang sesuai kalau muncul pesan ini.",
+          steps:[
+            {from:"user", text:"FORM AUDIT\nAUDITED: CR001\nCATEGORY: OPS\nAUDITOR: AUD9"},
+            {typing:800},
+            {from:"bot", text:"Actor tidak memiliki akses submit audit."},
+          ]
+        },
+        {
+          title:"“Wajib reply pesan audit”",
+          note:"Perbaikan & konfirmasi harus dikirim sebagai reply ke pesan audit sebelumnya.",
+          steps:[
+            {from:"user", text:"FORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
+            {typing:900},
+            {from:"bot", text:"Form perbaikan wajib reply pada pesan audit sebelumnya (quoted block wajib ada)."},
+          ]
+        },
+      ]
+    },
+    {
+      id:"forms", nav:"The Forms", title:"The Forms", type:"html",
+      html:`
+        <p>Kirim setiap form sebagai <b>satu pesan</b>. Ganti bagian di dalam &lt; &gt;.</p>
+        <h3>FORM AUDIT (buat temuan)</h3>
+        <pre>FORM AUDIT
+AUDITED: &lt;kode resmi audited, contoh CR001&gt;
+CATEGORY: &lt;kategori audit&gt;
+AUDITOR: &lt;kode auditor&gt;
+CODE: &lt;kode/klien, opsional&gt;
+NOTES: &lt;catatan, opsional&gt;
+CC: &lt;@mention tambahan, opsional&gt;</pre>
+        <h3>FORM PERBAIKAN &amp; FORM CONFIRMED (reply pesan audit)</h3>
+        <pre>FORM PERBAIKAN
+REF_AUDIT: &lt;REF_AUDIT dari pesan audit&gt;
+
+FORM CONFIRMED
+REF_AUDIT: &lt;REF_AUDIT dari pesan audit&gt;</pre>
+        <h3>FORM CANCEL AUDIT (batalkan)</h3>
+        <pre>FORM CANCEL AUDIT
+REF_AUDIT: &lt;REF_AUDIT&gt;
+AUDITED: &lt;kode audited&gt;
+CATEGORY: &lt;kategori&gt;
+CODE: &lt;kode&gt;
+APPROVED BY: &lt;siapa yang menyetujui&gt;
+CANCELLATION REASON: &lt;alasan&gt;</pre>
+        <div class="grid2">
+          <details open><summary>Apa itu REF_AUDIT?</summary>
+            <p>Nomor unik Audit Case, format <code>AUD-2604-CR-0011</code>. Bot yang membuatnya —
+               pakai untuk perbaikan, konfirmasi, atau pembatalan.</p></details>
+          <details><summary>Audit Sales</summary>
+            <p><code>FORM AUDIT SALES</code> hanya untuk divisi CR, wajib lampirkan foto,
+               dan wajib mention/cc @Auditor.</p></details>
+        </div>`
+    },
+    {
+      id:"cheats", nav:"Quick Reference", title:"Quick Reference", type:"commands",
+      columns:["Ketik ini","Kapan dipakai","Yang bot lakukan"],
+      rows:[
+        {"Ketik ini":"!check", "Kapan dipakai":"Lihat izin kamu", "Yang bot lakukan":"Tampilkan nama dan akses."},
+        {"Ketik ini":"FORM AUDIT", "Kapan dipakai":"Buat temuan baru", "Yang bot lakukan":"Buat Audit Case + beri REF_AUDIT."},
+        {"Ketik ini":"FORM PERBAIKAN", "Kapan dipakai":"Reply untuk kirim perbaikan", "Yang bot lakukan":"Status jadi perbaikan_submitted."},
+        {"Ketik ini":"FORM CONFIRMED", "Kapan dipakai":"Reply untuk tutup temuan", "Yang bot lakukan":"Status jadi confirmed."},
+        {"Ketik ini":"FORM CANCEL AUDIT", "Kapan dipakai":"Batalkan (superior/auditor)", "Yang bot lakukan":"Status jadi cancelled."},
+      ]
+    },
+    {
+      id:"faq", nav:"FAQ", title:"FAQ", type:"html",
+      html:`
+        <details><summary>Bot tidak membalas — kenapa?</summary>
+          <p>Kirim <kbd>!check</kbd>. Kalau tidak ada balasan atau “tidak terdaftar”, minta admin. Selain itu, tunggu sebentar dan kirim ulang form.</p></details>
+        <details><summary>Siapa yang boleh kirim perbaikan/konfirmasi?</summary>
+          <p>Hanya nomor <b>audited</b> terkait, dan harus me-reply pesan audit sebelumnya.</p></details>
+        <details><summary>Siapa yang boleh membatalkan?</summary>
+          <p>Hanya <b>superior</b> yang diaudit atau <b>auditor</b> audit tersebut.</p></details>
+        <details><summary>Kapan reminder dikirim?</summary>
+          <p>Mulai H+1 jam 12:00, lalu tiap hari jam 12:00 selama masih pending. Minggu dan hari libur dilewati.</p></details>`
+    },
+  ],
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="docs-engine.js"></script>
+</body>
+</html>

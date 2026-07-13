@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="docs-styles.css" />
+</head>
+<body>
+<script>
+/* =====================================================================
+   TECHNICAL DOCS — for engineers/operators. Edit only this DOCS_DATA.
+   Template = docs-styles.css + docs-engine.js (shared, unchanged).
+   ===================================================================== */
+window.DOCS_DATA = {
+  project: "Bot Auditing",
+  audience: "Technical Docs",
+  tagline: "WhatsApp/GOWA-driven Audit Case workflow. Go, layered architecture, Google Sheets persistence + reminders.",
+  repo: "https://github.com/deccara-tech/bot-auditing",
+  fallbackVersion: "v0.1.0",
+  crossLink: { href: "index.html", label: "User Guide" },
+
+  sections: [
+    {
+      id:"overview", nav:"Overview", title:"Overview", type:"html",
+      html:`
+        <div class="grid2">
+          <div class="card">
+            <h3>Responsibilities</h3>
+            <ul style="margin:0;padding-left:18px">
+              <li>Receive GOWA webhook, detect audit command</li>
+              <li>Parse form → validate → resolve Division + category policy</li>
+              <li>Create/advance an Audit Case identified by REF_AUDIT</li>
+              <li>Enforce actor authorization + quote-reply rules</li>
+              <li>Persist to the Division's Google Sheet; run daily reminders</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Domain vocabulary</h3>
+            <ul style="margin:0;padding-left:18px">
+              <li><b>Audit Case</b>: tracked finding, keyed by REF_AUDIT</li>
+              <li><b>Audited Target</b> → belongs to one <b>Division</b></li>
+              <li><b>Auditor</b> submits; <b>Reviewer/Superior</b> corrects/confirms/cancels</li>
+              <li><b>Audit Action</b>: recorded lifecycle event</li>
+              <li><b>Correction</b> (perbaikan), <b>Confirmation</b>, <b>Cancellation</b></li>
+            </ul>
+          </div>
+        </div>`
+    },
+    {
+      id:"architecture", nav:"Architecture", title:"Architecture & Layers", type:"html",
+      html:`
+        <p>Layered Go modules with enforced dependency direction (architecture import tests). See <code>docs/adr/0001-architecture-boundaries.md</code>.</p>
+        <table>
+          <tr><th>Package</th><th>Owns</th><th>Must not depend on</th></tr>
+          <tr><td><code>cmd/bot</code>, <code>cmd/bot/adapter</code></td><td>Wiring, concrete store construction, webhook server lifecycle</td><td>— / <code>transport/*</code> (adapter)</td></tr>
+          <tr><td><code>transport/gowa</code></td><td>Webhook, GOWA payloads, command detection, mentions, reply rendering</td><td><code>store/*</code>, <code>internal/*</code></td></tr>
+          <tr><td><code>app/audit</code></td><td>Audit Workflow orchestration (intake, correction, confirmation, cancellation) + ports</td><td><code>transport/*</code>, <code>store/*</code></td></tr>
+          <tr><td><code>app/bot</code></td><td>Bot Runtime ports (idempotency, reminders, config status)</td><td><code>transport/*</code>, <code>store/*</code></td></tr>
+          <tr><td><code>domain/audit</code></td><td>Pure rules: forms, REF_AUDIT, status transitions, scoring, reminder timing</td><td>app/transport/store, Google, HTTP, FS</td></tr>
+          <tr><td><code>store/sheets</code></td><td>Sheets persistence, routing, sheet-backed config, holiday calendar, counters</td><td><code>transport/*</code>, <code>internal/*</code></td></tr>
+          <tr><td><code>store/local</code></td><td>Local idempotency markers, retention cleanup, gating/access files</td><td><code>transport/*</code>, <code>internal/*</code></td></tr>
+        </table>`
+    },
+    {
+      id:"flows", nav:"Flow Diagrams", title:"Flow Diagrams", type:"diagrams",
+      items:[
+        { title:"End-to-end webhook flow", code:`flowchart LR
+  U[Actor in WA group] -->|message| G[GOWA]
+  G -->|POST /webhooks/gowa| W[transport/gowa]
+  W --> D{detect command}
+  D -->|audit_intake| IN[app/audit Intake]
+  D -->|audit_perbaikan| CR[app/audit Correction]
+  D -->|audit_confirmed| CF[app/audit Confirmation]
+  D -->|audit_cancel| CX[app/audit Cancellation]
+  D -->|audit_check| CK[access check]
+  IN --> R[Audit Case Router] --> S[(Division Google Sheet)]
+  CR --> R
+  CF --> R
+  CX --> R
+  W -->|reply| G` },
+        { title:"Intake to pending correction", code:`sequenceDiagram
+  participant A as Auditor
+  participant B as Bot
+  participant Sh as Division Sheet
+  A->>B: FORM AUDIT
+  B->>B: check can_audit_submit + attachment rule
+  B->>B: parse form, validate AUDITED CATEGORY AUDITOR
+  B->>B: resolve Division and category policy
+  B->>Sh: create Audit Case, assign REF_AUDIT
+  B-->>A: AUDIT CASE CREATED plus REF_AUDIT
+  Note over B: status perbaikan_required` },
+        { title:"Correction and confirmation", code:`sequenceDiagram
+  participant T as Audited Target
+  participant B as Bot
+  participant Sh as Division Sheet
+  T->>B: quote-reply FORM PERBAIKAN
+  B->>B: verify quoted REF_AUDIT matches form
+  B->>B: verify actor is audited phone owner
+  B->>Sh: record correction
+  B-->>T: PERBAIKAN TERCATAT status perbaikan_submitted
+  T->>B: quote-reply FORM CONFIRMED
+  B->>Sh: record confirmation
+  B-->>T: CONFIRMED TERCATAT status confirmed` },
+        { title:"Cancellation", code:`flowchart TD
+  A[FORM CANCEL AUDIT] --> B{REF_AUDIT found?}
+  B -->|no| E1[reject: REF_AUDIT tidak ditemukan]
+  B -->|already cancelled| E2[AUDIT SUDAH DICANCEL]
+  B -->|ok| C{AUDITED CATEGORY CODE match ref?}
+  C -->|no| E3[reject: field tidak match]
+  C -->|yes| D{actor superior or auditor?}
+  D -->|no| E4[reject: hanya superior atau auditor]
+  D -->|yes| F[AUDIT DICANCEL status cancelled]` },
+      ]
+    },
+    {
+      id:"ref", nav:"REF_AUDIT", title:"REF_AUDIT & Status Lifecycle", type:"html",
+      html:`
+        <pre>REF_AUDIT = AUD-&lt;PERIOD&gt;-&lt;DIVISION&gt;-&lt;RUNNING&gt;   e.g. AUD-2604-CR-0011</pre>
+        <ul>
+          <li><code>AUD</code> = fixed prefix</li>
+          <li><code>PERIOD</code> = 4-digit period (YYMM)</li>
+          <li><code>DIVISION</code> = division key (routes to the Division's spreadsheet)</li>
+          <li><code>RUNNING</code> = 4-digit running number</li>
+          <li>Division is extracted from the REF to pick the persistence store.</li>
+        </ul>
+        <h3>Status lifecycle</h3>
+        <table>
+          <tr><th>Status</th><th>Meaning</th></tr>
+          <tr><td><code>opened</code></td><td>Initial intake state</td></tr>
+          <tr><td><code>perbaikan_required</code></td><td>Awaiting correction from audited target</td></tr>
+          <tr><td><code>perbaikan_submitted</code></td><td>Correction recorded</td></tr>
+          <tr><td><code>confirmed_required</code></td><td>Awaiting confirmation</td></tr>
+          <tr><td><code>confirmed</code></td><td>Closed / done</td></tr>
+          <tr><td><code>cancelled</code></td><td>Cancelled by superior or auditor (record preserved)</td></tr>
+        </table>`
+    },
+    {
+      id:"commands", nav:"Command Detection", title:"Command Detection & Rules", type:"commands",
+      columns:["Command","Trigger (aliases)","Authorization","Result"],
+      rows:[
+        {Command:"check", "Trigger (aliases)":"first line == !check", Authorization:"any registered user", Result:"access config reply"},
+        {Command:"audit_intake", "Trigger (aliases)":"FORM AUDIT / AUDIT OPERATIONAL FORM / FORM AUDIT SALES", Authorization:"can_audit_submit; audited mention/CC rule; SALES = CR + image + @Auditor", Result:"AUDIT CASE CREATED + REF_AUDIT"},
+        {Command:"audit_perbaikan", "Trigger (aliases)":"FORM PERBAIKAN / CORRECTION FORM", Authorization:"audited phone owner; must quote-reply audit msg", Result:"PERBAIKAN TERCATAT; status perbaikan_submitted"},
+        {Command:"audit_confirmed", "Trigger (aliases)":"FORM CONFIRMED / CONFIRMATION FORM", Authorization:"audited phone owner; must quote-reply audit msg", Result:"CONFIRMED TERCATAT; status confirmed"},
+        {Command:"audit_cancel", "Trigger (aliases)":"FORM CANCEL AUDIT / AUDIT CANCELLATION FORM", Authorization:"superior of audited or auditor; fields must match REF", Result:"AUDIT DICANCEL; status cancelled"},
+      ]
+    },
+    {
+      id:"safety", nav:"Safety-Critical", title:"Safety-Critical Behavior", type:"html",
+      html:`
+        <p>Preserve unless explicitly changed:</p>
+        <ul>
+          <li>Webhook endpoint <code>POST /webhooks/gowa</code>; idempotency key <code>chatID:messageID</code></li>
+          <li>HTTP ACK semantics for ignored/duplicate/invalid messages (200 OK, empty body)</li>
+          <li>Group/private access + sender allow/deny; active sender role checks</li>
+          <li>Role capabilities: <code>can_audit_submit</code>, <code>can_audit_review</code>, <code>can_audit_cancel</code>, <code>can_receive_audit_reminder</code></li>
+          <li>Attachment requirement when <code>AUDIT_REQUIRE_ATTACHMENT=true</code></li>
+          <li>Quote/reply requirement for correction and confirmation</li>
+          <li>REF_AUDIT format &amp; parsing; Audit Category scoring/fixability behavior</li>
+          <li>Reminder timing: H+1 at 12:00 (AUDIT_TIMEZONE), daily while pending, skip Sundays + configured holidays</li>
+          <li>Sheet-backed config refresh + last-good fallback; config alert behavior</li>
+          <li>Sheet compatibility: tab names, headers, column order, row parsing/index</li>
+        </ul>`
+    },
+    {
+      id:"setup", nav:"Setup & Config", title:"Setup & Configuration", type:"html",
+      html:`
+        <div class="card">
+          <h3>Run locally</h3>
+          <pre>cp config/.env.example config/.env   # edit values
+# prepare config/roles.json, config/audit_routing.json
+# optional config/audit_categories.json when AUDIT_CATEGORY_SOURCE=json
+go run ./cmd/bot                     # webhook on :8080  (POST /webhooks/gowa)</pre>
+          <h3 style="margin-top:16px">Preflight check</h3>
+          <pre>go run ./cmd/bot --preflight         # startup + sheets/category/routing validation</pre>
+        </div>
+        <table style="margin-top:16px">
+          <tr><th>Env / config</th><th>Purpose</th></tr>
+          <tr><td><code>AUDIT_ENABLED</code></td><td>Enable the audit feature + command detection.</td></tr>
+          <tr><td><code>AUDIT_ROUTING_CONFIG_PATH</code></td><td>Division routing + audited targets + superiors + holiday mapping.</td></tr>
+          <tr><td><code>ROLE_CONFIG_PATH</code></td><td>Roles/capabilities + sender whitelist (<code>config/roles.json</code>).</td></tr>
+          <tr><td><code>AUDIT_CATEGORY_SOURCE</code> / <code>AUDIT_CATEGORY_CONFIG_PATH</code></td><td>Category policy source: <code>sheet</code> or <code>json</code>.</td></tr>
+          <tr><td><code>CONFIG_SOURCE</code> / <code>CONFIG_SPREADSHEET_ID</code></td><td><code>sheet</code> reads central config tabs; <code>json</code> uses local files.</td></tr>
+          <tr><td><code>CONFIG_REFRESH_INTERVAL_SEC</code> / <code>CONFIG_LAST_GOOD_PATH</code></td><td>Central config refresh (60s) + last-good fallback on invalid edits.</td></tr>
+          <tr><td><code>AUDIT_REQUIRE_ATTACHMENT</code></td><td>Require evidence attachment on intake.</td></tr>
+          <tr><td><code>AUDIT_REMINDER_ENABLED</code> / <code>AUDIT_REMINDER_INTERVAL_MIN</code></td><td>Reminder scan; send window is 12:00 daily while pending.</td></tr>
+          <tr><td><code>AUDIT_TIMEZONE</code></td><td>Timezone for reminder + holiday-sync timing (default <code>Asia/Jakarta</code>).</td></tr>
+          <tr><td><code>AUDIT_OPTIONAL_NEXT_STEP_ENABLED</code></td><td>Append the "OPSIONAL NEXT STEP" helper after intake.</td></tr>
+          <tr><td><code>GOWA_API_TOKEN</code> / <code>GOWA_BASIC_USER,PASS</code></td><td>GOWA auth: Bearer or Basic.</td></tr>
+          <tr><td><code>STORAGE_DIR</code> / <code>STORAGE_RETENTION_DAYS</code> / <code>PROCESS_TIMEOUT_SEC</code></td><td>Local idempotency storage, retention (30d), per-message timeout (60s).</td></tr>
+        </table>
+        <p class="muted">Central config tabs (CONFIG_SOURCE=sheet): config_settings, config_sender, config_divisions, config_audited_targets, config_reminder_routes, national_holidays. Division spreadsheets are separate, referenced by config_divisions rows.</p>`
+    },
+    {
+      id:"versioning", nav:"Versioning", title:"Versioning & Changelog", type:"changelog",
+      items:[
+        { v:"v0.1.0", notes:"Audit-only webhook service: FORM AUDIT/PERBAIKAN/CONFIRMED/CANCEL, REF_AUDIT lifecycle, Division routing, Google Sheets persistence, daily reminders with holiday skip, sheet-backed config with last-good fallback." },
+      ]
+    },
+  ],
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="docs-engine.js"></script>
+</body>
+</html>
