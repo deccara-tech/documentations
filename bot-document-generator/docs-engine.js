@@ -5,7 +5,7 @@
    DOCS_DATA = {
      project, tagline, repo, fallbackVersion,
      audience,            // e.g. "User Guide" / "Technical Docs"
-     crossLink,           // { href, label } to the sibling doc
+     crossLink,           // { href, label } or [{href,label},...] to sibling doc(s)
      sections: [
        { id, nav, title, type:"html",      html }                        |
        { id, nav, title, type:"changelog", items:[{v,notes}] }           |
@@ -23,7 +23,8 @@
   /* ---------- shell ---------- */
   document.title = `${D.project} — ${D.audience}`;
   const navLinks = D.sections.map(s=>`<a href="#${s.id}">${esc(s.nav||s.title)}</a>`).join("");
-  const switchBtn = D.crossLink ? `<a class="switch" href="${D.crossLink.href}">${esc(D.crossLink.label)} →</a>` : "";
+  const switchBtn = (D.crossLink ? [].concat(D.crossLink) : [])
+    .map(l=>`<a class="switch" href="${l.href}">${esc(l.label)} →</a>`).join("");
 
   document.body.innerHTML = `
     <div class="wrap">
