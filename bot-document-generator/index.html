@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="docs-styles.css" />
+</head>
+<body>
+<script>
+/* =====================================================================
+   USER GUIDE — non-technical. Edit only this DOCS_DATA object.
+   Template = docs-styles.css + docs-engine.js (shared, unchanged).
+   ===================================================================== */
+window.DOCS_DATA = {
+  project: "Document Bot",
+  audience: "User Guide",
+  tagline: "Create invoices, quotations, and receipts straight from WhatsApp — no app to install.",
+  repo: "https://github.com/deccara-tech/bot-document-generator",
+  fallbackVersion: "v0.3.0",
+  crossLink: { href: "technical.html", label: "Technical Docs" },
+
+  sections: [
+    {
+      id:"start", nav:"Getting Started", title:"Getting Started", type:"html",
+      html:`
+        <div class="grid2">
+          <div class="card">
+            <h3>What is this?</h3>
+            <p>A WhatsApp assistant that turns a simple message into a ready-to-send
+            PDF document (Invoice, Quotation, or Receipt) and keeps a record for you.</p>
+          </div>
+          <div class="card">
+            <h3>Before you start</h3>
+            <ul style="margin:0;padding-left:18px">
+              <li>Your phone number must be registered by an admin.</li>
+              <li>You send messages in the approved WhatsApp group.</li>
+              <li>Type <kbd>!check</kbd> anytime to see what you're allowed to do.</li>
+            </ul>
+          </div>
+        </div>
+        <h3>The 3-step routine</h3>
+        <ol class="steps">
+          <li><b>Send the form.</b> Fill in the request form and send it as one message.</li>
+          <li><b>Get the document.</b> The bot replies with your PDF and a confirmation card.</li>
+          <li><b>Approve or reject.</b> Reply to that card with <b>Y</b> (approve) or <b>N</b> (reject).
+              Approved documents are saved automatically.</li>
+        </ol>`
+    },
+    {
+      id:"flow", nav:"How It Works", title:"How It Works", type:"diagrams",
+      items:[
+        { title:"The whole journey, start to finish", code:`flowchart TD
+  A[You send the form in WhatsApp] --> B{Are you registered?}
+  B -->|No| X[Bot: you are not registered - ask an admin]
+  B -->|Yes| C{Is the form complete?}
+  C -->|No| Y[Bot lists what is missing - fix and resend]
+  C -->|Yes| D{Is another document still waiting?}
+  D -->|Yes| Z[Bot: approve or reject the waiting one first]
+  D -->|No| E[Bot creates your PDF document]
+  E --> F[Bot sends the PDF plus a confirmation card]
+  F --> G{You reply to the card}
+  G -->|Y approve| H[Saved to Google Drive and recorded in the sheet]
+  G -->|N reject| I[Document cancelled]
+  H --> J{Need a change later?}
+  I --> J
+  J -->|Yes within 30 days| K[Send REVISI with the document number] --> E
+  J -->|No| L[Done]` },
+      ]
+    },
+    {
+      id:"try", nav:"Try It Live", title:"Try It Live", type:"demo",
+      intro:"Pick a situation below and watch how the chat looks — exactly what you send and what the bot replies.",
+      cases:[
+        {
+          title:"Check what I can do (!check)",
+          note:"Sends back your name and permissions. Handy if something isn't working.",
+          steps:[
+            {from:"user", text:"!check"},
+            {typing:900},
+            {from:"bot", text:"Hello, this is your bot access config:\n\nDisplay Name: Caesario Dito\nPhone: 6281332046077\nPrivate Group: -\n\nAccess:\n- Request Document: TRUE\n- Finance / Approver: TRUE\n- Super Admin: FALSE"},
+          ]
+        },
+        {
+          title:"Request an Invoice",
+          note:"Fill the form and send. You get a PDF plus a confirmation card to approve.",
+          steps:[
+            {from:"user", text:"FORM REQUEST DOCUMENT\nNAME: PT Web Media Barindo\nCATEGORY: INV\nLANGUAGE: BAHASA\nCOMPANY: WBM\nBRANCH: WEST\nDATE: 05 Jan 2025\nNOTES :\n\nPURCHASE DETAILS\n3500K (C7158-W) + 750K (TAILORING)\nTOTAL: 4,250,000\n\nREK BCA / 1234567890 / WOLTER BATIK MAHATARA PT"},
+            {typing:1400},
+            {from:"bot", kind:"file", fileName:"INV-2521056.WBM.CRM.pdf", text:"Your invoice is ready"},
+            {typing:900},
+            {from:"bot", text:"FORM REQUEST DOCUMENT\nCLIENT: PT Web Media Barindo\nCATEGORY: INV\nCOMPANY: WBM\nDATE: 05 Jan 2025\n\nPURCHASE DETAILS\n3500K (C7158-W)\n750K (TAILORING)\n\nTOTAL: 4,250,000\n\n----\nGENERATED UNIQUE_CODE_NUMBER: INV-2521056/WBM.CRM\n@6281332046077\n\nReply dengan quote pesan ini:\nY = Approve\nN = Reject"},
+          ]
+        },
+        {
+          title:"Approve the document",
+          note:"Reply to the confirmation card with Y. Only the person who requested it can approve.",
+          steps:[
+            {from:"user", quote:"GENERATED UNIQUE_CODE_NUMBER: INV-2521056/WBM.CRM", text:"Y"},
+            {typing:1200},
+            {from:"bot", text:"APPROVED INV-2521056.WBM.CRM"},
+            {typing:700},
+            {from:"bot", text:"✅ Saved to Google Drive\n✅ Recorded in the company sheet"},
+          ]
+        },
+        {
+          title:"Reject the document",
+          note:"Reply with N and (optionally) a short reason.",
+          steps:[
+            {from:"user", quote:"GENERATED UNIQUE_CODE_NUMBER: INV-2521056/WBM.CRM", text:"N harga belum sesuai"},
+            {typing:1100},
+            {from:"bot", text:"REJECTED INV-2521056.WBM.CRM\nReason: harga belum sesuai"},
+          ]
+        },
+        {
+          title:"Fix / revise a document",
+          note:"Start with REVISI and the document number, then send the corrected form. Allowed up to 30 days.",
+          steps:[
+            {from:"user", text:"REVISI : INV-2521056/WBM.CRM\nFORM REQUEST DOCUMENT\nNAME: PT Web Media Barindo\nCATEGORY: INV\nLANGUAGE: BAHASA\nCOMPANY: WBM\nBRANCH: WEST\nDATE: 06 Jan 2025\nNOTES :\n\nPURCHASE DETAILS\n3000K (C7158-W) + 750K (TAILORING)\nTOTAL: 3,750,000\n\nREK BCA / 1234567890 / WOLTER BATIK MAHATARA PT"},
+            {typing:1400},
+            {from:"bot", kind:"file", fileName:"INV-2521056.WBM.CRM.pdf", text:"Revised invoice ready"},
+            {typing:800},
+            {from:"bot", text:"FORM REQUEST DOCUMENT\nCLIENT: PT Web Media Barindo\nTOTAL: 3,750,000\n\n----\nGENERATED UNIQUE_CODE_NUMBER: INV-2521056/WBM.CRM\n\nReply dengan quote pesan ini:\nY = Approve\nN = Reject"},
+          ]
+        },
+        {
+          title:"“A document is still waiting”",
+          note:"Only one document can wait for approval at a time. Approve or reject the current one first.",
+          steps:[
+            {from:"user", text:"FORM REQUEST DOCUMENT\nNAME: PT Lain\nCATEGORY: QUO\n..."},
+            {typing:900},
+            {from:"bot", text:"Masih ada dokumen yang menunggu Approve/Reject: INV-2521056.WBM.CRM. Form baru/revisi belum dapat diajukan."},
+          ]
+        },
+        {
+          title:"“You’re not registered”",
+          note:"Ask an admin to add your number if you see this.",
+          steps:[
+            {from:"user", text:"FORM REQUEST DOCUMENT\nNAME: ...\nCATEGORY: INV"},
+            {typing:800},
+            {from:"bot", text:"Hello, your phone number is not registered for bot access.\n\nPlease ask an admin to check the config_roles tab.\nDetected phone: 6289900001111"},
+          ]
+        },
+        {
+          title:"“Form isn’t complete”",
+          note:"The bot lists exactly what’s missing. Fix those lines and resend.",
+          steps:[
+            {from:"user", text:"FORM REQUEST DOCUMENT\nNAME:\nCATEGORY: XYZ\nPURCHASE DETAILS"},
+            {typing:900},
+            {from:"bot", text:"Form tidak memenuhi syarat: NAME wajib diisi, CATEGORY harus QUO/INV/RCP, PURCHASE DETAILS kosong."},
+          ]
+        },
+      ]
+    },
+    {
+      id:"form", nav:"The Request Form", title:"The Request Form", type:"html",
+      html:`
+        <p>Send this as <b>one single message</b>. Copy the template and replace the parts in &lt; &gt;.</p>
+        <pre>FORM REQUEST DOCUMENT
+NAME: &lt;client name&gt;
+CATEGORY: &lt;QUO = quotation | INV = invoice | RCP = receipt&gt;
+LANGUAGE: &lt;BAHASA or ENGLISH&gt;
+COMPANY: &lt;WBN | WBD | WBM | WBJ | WBK | WBB&gt;
+BRANCH: &lt;WEST | SOUTH | EAST | NORTH | CENTER&gt;
+DATE: &lt;date shown on the document&gt;
+NOTES : &lt;optional message; leave blank for default terms&gt;
+
+PURCHASE DETAILS
+&lt;price&gt; (&lt;item code or name&gt;)
+TOTAL: &lt;total amount&gt;
+DP: &lt;down payment&gt;          (optional)
+REK &lt;bank / account no / account name&gt;</pre>
+        <div class="grid2">
+          <details open><summary>Writing prices</summary>
+            <p><kbd>2279K</kbd> means 2,279,000. Put several items on one line with a
+               <kbd>+</kbd>, e.g. <code>3500K (C7158-W) + 750K (TAILORING)</code>.</p></details>
+          <details><summary>What is the document number?</summary>
+            <p>The bot creates it for you, like <code>INV-2521056.WBM.CRM</code>. Use it when you
+               need to revise a document later.</p></details>
+        </div>`
+    },
+    {
+      id:"cheats", nav:"Quick Reference", title:"Quick Reference", type:"commands",
+      columns:["Type this","When to use it","What the bot does"],
+      rows:[
+        {"Type this":"!check", "When to use it":"To see your permissions", "What the bot does":"Shows your name and what you can do."},
+        {"Type this":"FORM REQUEST DOCUMENT", "When to use it":"To create a new document", "What the bot does":"Sends the PDF + a card to approve."},
+        {"Type this":"Y", "When to use it":"Reply to the card to approve", "What the bot does":"Saves and files the document."},
+        {"Type this":"N", "When to use it":"Reply to the card to reject", "What the bot does":"Cancels it (add a reason if you like)."},
+        {"Type this":"REVISI : <doc number>", "When to use it":"To correct a document", "What the bot does":"Re-creates it (within 30 days)."},
+      ]
+    },
+    {
+      id:"faq", nav:"FAQ", title:"FAQ", type:"html",
+      html:`
+        <details><summary>The bot didn’t reply — what now?</summary>
+          <p>Send <kbd>!check</kbd>. If you get no reply or “not registered”, ask an admin. Otherwise wait a moment and resend the form.</p></details>
+        <details><summary>Can I approve someone else’s document?</summary>
+          <p>No. Only the person who requested a document can approve or reject it.</p></details>
+        <details><summary>I made a mistake after approving.</summary>
+          <p>Use <b>REVISI</b> with the document number to send a corrected version, within 30 days of the original.</p></details>
+        <details><summary>Where do approved documents go?</summary>
+          <p>They’re automatically saved to Google Drive and logged in the company’s sheet. You don’t need to do anything.</p></details>`
+    },
+  ],
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="docs-engine.js"></script>
+</body>
+</html>

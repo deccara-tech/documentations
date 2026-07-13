@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="docs-styles.css" />
+</head>
+<body>
+<script>
+/* =====================================================================
+   TECHNICAL DOCS — for engineers/operators. Edit only this DOCS_DATA.
+   Template = docs-styles.css + docs-engine.js (shared, unchanged).
+   ===================================================================== */
+window.DOCS_DATA = {
+  project: "Bot Document Generator",
+  audience: "Technical Docs",
+  tagline: "WhatsApp/GOWA-driven document generation, approval, and archival. Go, direct-PDF rendering, Google Sheets + Drive.",
+  repo: "https://github.com/deccara-tech/bot-document-generator",
+  fallbackVersion: "v0.3.0",
+  crossLink: { href: "index.html", label: "User Guide" },
+
+  sections: [
+    {
+      id:"overview", nav:"Overview", title:"Overview", type:"html",
+      html:`
+        <div class="grid2">
+          <div class="card">
+            <h3>Responsibilities</h3>
+            <ul style="margin:0;padding-left:18px">
+              <li>Receive GOWA webhook, detect command</li>
+              <li>Parse form → validate → reserve doc number</li>
+              <li>Render deterministic A4 PDF (no Chromium)</li>
+              <li>Hold one pending Document; process the Decision</li>
+              <li>On approve: upload Drive + upsert master sheet</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Domain vocabulary</h3>
+            <ul style="margin:0;padding-left:18px">
+              <li><b>Request</b> → exactly one <b>Document</b></li>
+              <li><b>Decision</b>: approve/reject a pending Document</li>
+              <li><b>Revision</b>: modify within 30-day window</li>
+              <li><b>Company</b>: routing + numbering + Drive folder</li>
+              <li>One pending Document system-wide at a time</li>
+            </ul>
+          </div>
+        </div>`
+    },
+    {
+      id:"architecture", nav:"Architecture", title:"Architecture & Layers", type:"html",
+      html:`
+        <p>Layered Go modules with enforced dependency direction (see <code>architecture_imports_test.go</code> in each package).</p>
+        <table>
+          <tr><th>Package</th><th>Owns</th><th>Must not depend on</th></tr>
+          <tr><td><code>cmd/bot</code></td><td>Wiring, concrete store construction, adapters</td><td>—</td></tr>
+          <tr><td><code>transport/whatsapp</code></td><td>Webhook, GOWA payloads, command detection, WA rendering</td><td><code>store/*</code></td></tr>
+          <tr><td><code>app/bot</code></td><td>Bot runtime ports (idempotency, outbox, reminders)</td><td><code>transport/*</code>, <code>store/*</code></td></tr>
+          <tr><td><code>app/document</code></td><td>Request / Decision / Revision workflows + ports</td><td><code>transport/*</code>, <code>store/*</code></td></tr>
+          <tr><td><code>domain/document</code></td><td>Pure workflow rules, validation, numbering policy</td><td>app/transport/store, Google, HTTP, FS</td></tr>
+          <tr><td><code>domain/invoice</code></td><td>Deterministic PDF layout & rendering</td><td>HTML/Chromium</td></tr>
+          <tr><td><code>store/sheets</code>, <code>store/drive</code></td><td>Google Sheets/Drive persistence</td><td><code>transport/*</code></td></tr>
+        </table>`
+    },
+    {
+      id:"flows", nav:"Flow Diagrams", title:"Flow Diagrams", type:"diagrams",
+      items:[
+        { title:"End-to-end webhook flow", code:`flowchart LR
+  U[Operator in WA group] -->|message| G[GOWA]
+  G -->|POST /webhooks/gowa| W[transport/whatsapp]
+  W --> D{detect command}
+  D -->|request| RQ[app/document Request]
+  D -->|decision| DC[app/document Decision]
+  D -->|revision| RV[app/document Revision]
+  D -->|check| CK[access check]
+  RQ --> PDF[domain/invoice PDF]
+  PDF --> S[(Google Sheets)]
+  DC --> DR[(Google Drive)]
+  W -->|reply| G` },
+        { title:"Request to pending decision", code:`sequenceDiagram
+  participant O as Operator
+  participant B as Bot
+  participant Sh as Sheets
+  O->>B: FORM REQUEST DOCUMENT
+  B->>B: parse and validate form
+  B->>Sh: reserve doc number per company year type
+  B->>B: render PDF
+  B-->>O: PDF file
+  B-->>O: approval prompt Y or N
+  Note over B: status generated_waiting_decision` },
+        { title:"Decision (approve / reject)", code:`sequenceDiagram
+  participant O as Requester
+  participant B as Bot
+  participant Dr as Drive
+  participant Sh as Sheets
+  O->>B: quote-reply prompt with Y or N
+  B->>B: verify actor is original requester
+  alt Approved
+    B->>Dr: upload PDF company type year month
+    B->>Sh: upsert master sheet QUO INV RCP
+    B-->>O: APPROVED doc-number
+  else Rejected
+    B->>Sh: mark rejected
+    B-->>O: REJECTED doc-number plus reason
+  end` },
+        { title:"Revision", code:`flowchart TD
+  A[REVISI DOC plus new form] --> B{doc exists in master?}
+  B -->|no| E1[reject: not found]
+  B -->|pending decision| E2[reject: still pending]
+  B -->|older than 30 days| E3[reject: window expired]
+  B -->|ok| C[re-generate PDF plus new prompt]
+  C --> D[approve upserts and replaces old row]` },
+      ]
+    },
+    {
+      id:"numbering", nav:"Doc Numbering", title:"Document Number Policy", type:"html",
+      html:`
+        <pre>File key:  &lt;DOC&gt;-&lt;YY&gt;&lt;COMPANY_CODE&gt;&lt;RUN3&gt;.&lt;COMPANY&gt;.CRM   e.g. INV-2521056.WBM.CRM
+Sheet key: &lt;DOC&gt;-&lt;YY&gt;&lt;COMPANY_CODE&gt;&lt;RUN3&gt;/&lt;COMPANY&gt;.CRM   e.g. INV-2521056/WBM.CRM</pre>
+        <ul>
+          <li><code>DOC</code> = QUO | INV | RCP</li>
+          <li><code>YY</code> = 2-digit request year</li>
+          <li><code>COMPANY_CODE</code>: WBN=20, WBD=71, WBM=21, WBJ=19, WBK=31, WBB=30</li>
+          <li><code>RUN3</code> = 3-digit running number; resets yearly; scope = company + doc type</li>
+          <li>Counter key in <code>counter_global</code>: <code>doc_running_&lt;DOC_TYPE&gt;_&lt;COMPANY&gt;</code></li>
+        </ul>`
+    },
+    {
+      id:"commands", nav:"Command Detection", title:"Command Detection & Rules", type:"commands",
+      columns:["Command","Trigger","Authorization","Result"],
+      rows:[
+        {Command:"check", Trigger:"first line == !check", Authorization:"any registered active user", Result:"access config reply"},
+        {Command:"request", Trigger:"[!]FORM REQUEST DOCUMENT prefix", Authorization:"can_request; RCP finance-only", Result:"PDF + approval prompt; status generated_waiting_decision"},
+        {Command:"revision", Trigger:"REVISI : <DOC_ID> present", Authorization:"original requester or finance", Result:"re-generated PDF; ≤30 days; not while pending"},
+        {Command:"decision", Trigger:"Y/N/APPROVE/REJECT/OK/NO", Authorization:"actor == requester_id; must quote-reply prompt", Result:"APPROVED/REJECTED; Drive upload + master upsert on approve"},
+      ]
+    },
+    {
+      id:"safety", nav:"Safety-Critical", title:"Safety-Critical Behavior", type:"html",
+      html:`
+        <p>Preserve unless explicitly changed:</p>
+        <ul>
+          <li>Webhook idempotency key: <code>chatID:messageID</code></li>
+          <li>Group/private access rules; active sender role checks</li>
+          <li>Quote-reply required for approve/reject</li>
+          <li>Requester/finance revision authorization</li>
+          <li>Status lifecycle: <code>processing → generated_waiting_decision → approved / rejected / revision_processing / expired_30d</code></li>
+          <li>Drive upload + master upsert only on approval</li>
+        </ul>`
+    },
+    {
+      id:"setup", nav:"Setup & Config", title:"Setup & Configuration", type:"html",
+      html:`
+        <div class="card">
+          <h3>Run locally</h3>
+          <pre>cp config/.env.example config/.env   # edit values
+go run ./cmd/bot                     # webhook on :8080  (POST /webhooks/gowa)</pre>
+          <h3 style="margin-top:16px">CLI PDF only</h3>
+          <pre>go run ./cmd/invoicegen -input docs/example-input/invoice.json -output out/invoice.pdf</pre>
+          <h3 style="margin-top:16px">Docker</h3>
+          <pre>docker compose up --build            # binds 3002:3002</pre>
+        </div>
+        <table style="margin-top:16px">
+          <tr><th>Env / config</th><th>Purpose</th></tr>
+          <tr><td><code>ROLE_CONFIG_PATH</code></td><td>Roles/access whitelist (default <code>config/roles.json</code>). active=true ⇒ whitelisted.</td></tr>
+          <tr><td><code>COMPANY_SHEETS_CONFIG_PATH</code></td><td>Per-company sheet routing + numbering (hot-reloaded).</td></tr>
+          <tr><td><code>LOCATION_CONFIG_PATH</code></td><td>Branch → location string for master sheets (hot-reloaded).</td></tr>
+          <tr><td><code>GOWA_API_TOKEN</code> / <code>GOWA_BASIC_USER,PASS</code></td><td>GOWA auth: Bearer, or Basic (Basic preferred if set).</td></tr>
+          <tr><td><code>PROCESS_TIMEOUT_SEC</code></td><td>Max parse+PDF+send time (default 60s).</td></tr>
+          <tr><td><code>GDRIVE_ENABLED</code> / <code>GDRIVE_AUTH_MODE</code> / <code>GDRIVE_ROOT_FOLDER_*</code></td><td>Drive archival on approval. service_account (Workspace) or oauth (personal). Startup preflight validates folder + write.</td></tr>
+          <tr><td><code>REMINDER_ENABLED</code> / <code>REMINDER_INTERVAL_MIN</code></td><td>Pending-decision reminders (default 5 min).</td></tr>
+        </table>
+        <p class="muted">Approval archival path: <code>&lt;company&gt;/&lt;doc_type&gt;/&lt;year&gt;/&lt;month&gt;</code>. request_log stores <code>drive_file_id</code> + <code>drive_path</code>.</p>`
+    },
+    {
+      id:"versioning", nav:"Versioning", title:"Versioning & Changelog", type:"changelog",
+      items:[
+        { v:"v0.3.0", notes:"Company routing config, per-company numbering scope, Drive archival on approval, master-sheet upsert." },
+        { v:"v0.2.x", notes:"Revision workflow, reminder runtime, failed-send outbox, roles/access config." },
+        { v:"v0.1.x", notes:"Initial webhook bot, form parser, direct-PDF invoice rendering, approval prompt." },
+      ]
+    },
+  ],
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="docs-engine.js"></script>
+</body>
+</html>
