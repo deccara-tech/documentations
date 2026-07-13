@@ -72,36 +72,30 @@ window.DOCS_DATA = {
           steps:[
             {from:"user", text:"!check"},
             {typing:900},
-            {from:"bot", text:"Hello, this is your bot access config:\n\nDisplay Name: Caesario Dito\nPhone: 6281332046077\n\nAccess:\n- Audit Submit: TRUE\n- Audit Review: TRUE\n- Audit Cancel: FALSE\n- Receive Reminder: TRUE"},
+            {from:"bot", text:"Hello, this is your audit config:\n\nCode: AUD9\nDisplay Name: Caesario Dito\nPhone: 6281332046077\nMention Phone: 6281332046077\nDivision: CR\nPrivate Group: -\nSuperior Code: SP****\nSuperior Phone: 62811*****111\n\nAccess:\n- Submit Audit: TRUE\n- Review Audit: TRUE\n- Cancel Audit: FALSE\n- Receive Reminder: TRUE\n- Super Admin: FALSE"},
           ]
         },
         {
           title:"Buat Audit Case (FORM AUDIT)",
-          note:"Isi form dan kirim. Bot membalas dengan REF_AUDIT dan langkah opsional berikutnya.",
+          note:"Isi form dan kirim. Bot membalas dengan REF_AUDIT lalu template langkah lanjutan.",
           steps:[
             {from:"user", text:"FORM AUDIT\nAUDITED: CR001\nCATEGORY: OPS\nCODE: C-102\nAUDITOR: AUD9\nNOTES: rak display tidak rapi"},
             {typing:1400},
-            {from:"bot", text:"AUDIT CASE CREATED\nREF_AUDIT: AUD-2604-CR-0011\n\nDIVISION: CR\nAUDITED: CR001\nAUDITOR: AUD9\nCATEGORY: OPS\nCODE: C-102\nNOTES: rak display tidak rapi"},
-            {typing:800},
-            {from:"bot", text:"OPSIONAL NEXT STEP\n1. FORM PERBAIKAN\n2. FORM CONFIRMED\n\nContoh FORM PERBAIKAN (copy, lalu edit seperlunya):\nFORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
+            {from:"bot", text:"REF_AUDIT: AUD-2604-CR-0011\n\nDIVISION: CR\nAUDITED: CR001\nAUDITOR: AUD9\nCATEGORY: OPS\nCODE: C-102\nNOTES: rak display tidak rapi\n\nCORRECTION/CONFIRMATION FORM\nREF_AUDIT: AUD-2604-CR-0011"},
           ]
         },
         {
           title:"Kirim perbaikan (FORM PERBAIKAN)",
-          note:"Reply pesan audit sebelumnya. Hanya nomor yang diaudit yang boleh mengirim.",
+          note:"Reply pesan audit sebelumnya. Hanya nomor yang diaudit yang boleh mengirim. Bot mencatat tanpa balasan; status berubah ke perbaikan_submitted.",
           steps:[
-            {from:"user", quote:"AUDIT CASE CREATED\nREF_AUDIT: AUD-2604-CR-0011", text:"FORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
-            {typing:1100},
-            {from:"bot", text:"PERBAIKAN TERCATAT\nREF_AUDIT: AUD-2604-CR-0011\nSTATUS: perbaikan_submitted"},
+            {from:"user", quote:"REF_AUDIT: AUD-2604-CR-0011", text:"FORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
           ]
         },
         {
           title:"Konfirmasi selesai (FORM CONFIRMED)",
-          note:"Reply pesan audit lagi untuk menutup temuan.",
+          note:"Reply pesan audit lagi untuk menutup temuan. Bot mencatat tanpa balasan; status berubah ke confirmed.",
           steps:[
-            {from:"user", quote:"AUDIT CASE CREATED\nREF_AUDIT: AUD-2604-CR-0011", text:"FORM CONFIRMED\nREF_AUDIT: AUD-2604-CR-0011"},
-            {typing:1100},
-            {from:"bot", text:"CONFIRMED TERCATAT\nREF_AUDIT: AUD-2604-CR-0011\nSTATUS: confirmed"},
+            {from:"user", quote:"REF_AUDIT: AUD-2604-CR-0011", text:"FORM CONFIRMED\nREF_AUDIT: AUD-2604-CR-0011"},
           ]
         },
         {
@@ -110,7 +104,7 @@ window.DOCS_DATA = {
           steps:[
             {from:"user", text:"FORM CANCEL AUDIT\nREF_AUDIT: AUD-2604-CR-0011\nAUDITED: CR001\nCATEGORY: OPS\nCODE: C-102\nAPPROVED BY: SPVCR001\nCANCELLATION REASON: duplikat"},
             {typing:1200},
-            {from:"bot", text:"AUDIT DICANCEL\nREF_AUDIT: AUD-2604-CR-0011\nSTATUS: cancelled"},
+            {from:"bot", text:"AUDIT CANCELLED\nREF_AUDIT: AUD-2604-CR-0011\nSTATUS: cancelled"},
           ]
         },
         {
@@ -119,7 +113,7 @@ window.DOCS_DATA = {
           steps:[
             {from:"user", text:"FORM AUDIT\nAUDITED: CR001"},
             {typing:900},
-            {from:"bot", text:"Form audit tidak lengkap: CATEGORY, AUDITOR"},
+            {from:"bot", text:"❗ WARNING ❗\n\nThe audit form is incomplete: CATEGORY, AUDITOR."},
           ]
         },
         {
@@ -128,7 +122,7 @@ window.DOCS_DATA = {
           steps:[
             {from:"user", text:"FORM AUDIT\nAUDITED: CR001\nCATEGORY: OPS\nAUDITOR: AUD9"},
             {typing:800},
-            {from:"bot", text:"Actor tidak memiliki akses submit audit."},
+            {from:"bot", text:"❗ WARNING ❗\n\nThe user does not have permission to submit the audit."},
           ]
         },
         {
@@ -137,7 +131,7 @@ window.DOCS_DATA = {
           steps:[
             {from:"user", text:"FORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
             {typing:900},
-            {from:"bot", text:"Form perbaikan wajib reply pada pesan audit sebelumnya (quoted block wajib ada)."},
+            {from:"bot", text:"❗ WARNING ❗\n\nThe correction form must be submitted as a reply to the previous audit message (quoted block is required)."},
           ]
         },
       ]

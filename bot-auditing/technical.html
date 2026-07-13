@@ -139,10 +139,10 @@ window.DOCS_DATA = {
       columns:["Command","Trigger (aliases)","Authorization","Result"],
       rows:[
         {Command:"check", "Trigger (aliases)":"first line == !check", Authorization:"any registered user", Result:"access config reply"},
-        {Command:"audit_intake", "Trigger (aliases)":"FORM AUDIT / AUDIT OPERATIONAL FORM / FORM AUDIT SALES", Authorization:"can_audit_submit; audited mention/CC rule; SALES = CR + image + @Auditor", Result:"AUDIT CASE CREATED + REF_AUDIT"},
-        {Command:"audit_perbaikan", "Trigger (aliases)":"FORM PERBAIKAN / CORRECTION FORM", Authorization:"audited phone owner; must quote-reply audit msg", Result:"PERBAIKAN TERCATAT; status perbaikan_submitted"},
-        {Command:"audit_confirmed", "Trigger (aliases)":"FORM CONFIRMED / CONFIRMATION FORM", Authorization:"audited phone owner; must quote-reply audit msg", Result:"CONFIRMED TERCATAT; status confirmed"},
-        {Command:"audit_cancel", "Trigger (aliases)":"FORM CANCEL AUDIT / AUDIT CANCELLATION FORM", Authorization:"superior of audited or auditor; fields must match REF", Result:"AUDIT DICANCEL; status cancelled"},
+        {Command:"audit_intake", "Trigger (aliases)":"FORM AUDIT / AUDIT OPERATIONAL FORM / FORM AUDIT SALES", Authorization:"can_audit_submit; audited mention/CC rule; SALES = image + @Auditor", Result:"reply with REF_AUDIT + case fields (+ optional next-step template)"},
+        {Command:"audit_perbaikan", "Trigger (aliases)":"FORM PERBAIKAN / CORRECTION FORM", Authorization:"audited phone owner; must quote-reply audit msg", Result:"recorded silently; status → perbaikan_submitted"},
+        {Command:"audit_confirmed", "Trigger (aliases)":"FORM CONFIRMED / CONFIRMATION FORM", Authorization:"audited phone owner; must quote-reply audit msg", Result:"recorded silently; status → confirmed"},
+        {Command:"audit_cancel", "Trigger (aliases)":"FORM CANCEL AUDIT / AUDIT CANCELLATION FORM", Authorization:"superior of audited or auditor; fields must match REF", Result:"reply AUDIT CANCELLED; status → cancelled"},
       ]
     },
     {
