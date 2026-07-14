@@ -91,25 +91,23 @@ window.DOCS_DATA = {
             {typing:1400},
             {from:"bot", kind:"file", fileName:"INV-2521056.WBM.CRM.pdf", text:"Your invoice is ready"},
             {typing:900},
-            {from:"bot", text:"FORM REQUEST DOCUMENT\nCLIENT: PT Web Media Barindo\nCATEGORY: INV\nCOMPANY: WBM\nDATE: 05 Jan 2025\n\nPURCHASE DETAILS\n3500K (C7158-W)\n750K (TAILORING)\n\nTOTAL: 4,250,000\n\n----\nGENERATED UNIQUE_CODE_NUMBER: INV-2521056/WBM.CRM\n@6281332046077\n\nReply dengan quote pesan ini:\nY = Approve\nN = Reject"},
+            {from:"bot", text:"FORM REQUEST DOCUMENT\nCLIENT: PT Web Media Barindo\nCATEGORY: INV\nLANGUAGE: BAHASA\nCOMPANY: WBM\nBRANCH: WEST\nDATE: 05 Jan 2025\nNOTES :\n\nPURCHASE DETAILS\n3500K (C7158-W)\n750K (TAILORING)\n\nTOTAL: 4,250,000\n\nREK BCA / 1234567890 / WOLTER BATIK MAHATARA PT\n\n----\nGENERATED UNIQUE_CODE_NUMBER: INV-2521056.WBM.CRM\n@6281332046077\n\nReply dengan quote pesan ini:\nY = Approve\nN = Reject"},
           ]
         },
         {
           title:"Approve the document",
           note:"Reply to the confirmation card with Y. Only the person who requested it can approve.",
           steps:[
-            {from:"user", quote:"GENERATED UNIQUE_CODE_NUMBER: INV-2521056/WBM.CRM", text:"Y"},
+            {from:"user", quote:"GENERATED UNIQUE_CODE_NUMBER: INV-2521056.WBM.CRM", text:"Y"},
             {typing:1200},
-            {from:"bot", text:"APPROVED INV-2521056.WBM.CRM"},
-            {typing:700},
-            {from:"bot", text:"✅ Saved to Google Drive\n✅ Recorded in the company sheet"},
+            {from:"bot", text:"APPROVED INV-2521056.WBM.CRM\nDrive: WBM/INV/2025/01\nDrive URL: https://drive.google.com/file/d/…"},
           ]
         },
         {
           title:"Reject the document",
           note:"Reply with N and (optionally) a short reason.",
           steps:[
-            {from:"user", quote:"GENERATED UNIQUE_CODE_NUMBER: INV-2521056/WBM.CRM", text:"N harga belum sesuai"},
+            {from:"user", quote:"GENERATED UNIQUE_CODE_NUMBER: INV-2521056.WBM.CRM", text:"N harga belum sesuai"},
             {typing:1100},
             {from:"bot", text:"REJECTED INV-2521056.WBM.CRM\nReason: harga belum sesuai"},
           ]
@@ -118,11 +116,11 @@ window.DOCS_DATA = {
           title:"Fix / revise a document",
           note:"Start with REVISI and the document number, then send the corrected form. Allowed up to 30 days.",
           steps:[
-            {from:"user", text:"REVISI : INV-2521056/WBM.CRM\nFORM REQUEST DOCUMENT\nNAME: PT Web Media Barindo\nCATEGORY: INV\nLANGUAGE: BAHASA\nCOMPANY: WBM\nBRANCH: WEST\nDATE: 06 Jan 2025\nNOTES :\n\nPURCHASE DETAILS\n3000K (C7158-W) + 750K (TAILORING)\nTOTAL: 3,750,000\n\nREK BCA / 1234567890 / WOLTER BATIK MAHATARA PT"},
+            {from:"user", text:"REVISI : INV-2521056.WBM.CRM\nFORM REQUEST DOCUMENT\nNAME: PT Web Media Barindo\nCATEGORY: INV\nLANGUAGE: BAHASA\nCOMPANY: WBM\nBRANCH: WEST\nDATE: 06 Jan 2025\nNOTES :\n\nPURCHASE DETAILS\n3000K (C7158-W) + 750K (TAILORING)\nTOTAL: 3,750,000\n\nREK BCA / 1234567890 / WOLTER BATIK MAHATARA PT"},
             {typing:1400},
             {from:"bot", kind:"file", fileName:"INV-2521056.WBM.CRM.pdf", text:"Revised invoice ready"},
             {typing:800},
-            {from:"bot", text:"FORM REQUEST DOCUMENT\nCLIENT: PT Web Media Barindo\nTOTAL: 3,750,000\n\n----\nGENERATED UNIQUE_CODE_NUMBER: INV-2521056/WBM.CRM\n\nReply dengan quote pesan ini:\nY = Approve\nN = Reject"},
+            {from:"bot", text:"FORM REQUEST DOCUMENT\nCLIENT: PT Web Media Barindo\nTOTAL: 3,750,000\n\n----\nGENERATED UNIQUE_CODE_NUMBER: INV-2521056.WBM.CRM\n\nReply dengan quote pesan ini:\nY = Approve\nN = Reject"},
           ]
         },
         {

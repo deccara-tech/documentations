@@ -96,7 +96,7 @@ window.DOCS_DATA = {
   participant Dr as Drive
   participant Sh as Sheets
   O->>B: quote-reply prompt with Y or N
-  B->>B: verify actor is original requester
+  B->>B: verify actor is requester or super admin
   alt Approved
     B->>Dr: upload PDF company type year month
     B->>Sh: upsert master sheet QUO INV RCP
@@ -134,7 +134,7 @@ Sheet key: &lt;DOC&gt;-&lt;YY&gt;&lt;COMPANY_CODE&gt;&lt;RUN3&gt;/&lt;COMPANY&gt
         {Command:"check", Trigger:"first line == !check", Authorization:"any registered active user", Result:"access config reply"},
         {Command:"request", Trigger:"[!]FORM REQUEST DOCUMENT prefix", Authorization:"can_request; RCP finance-only", Result:"PDF + approval prompt; status generated_waiting_decision"},
         {Command:"revision", Trigger:"REVISI : <DOC_ID> present", Authorization:"original requester or finance", Result:"re-generated PDF; ≤30 days; not while pending"},
-        {Command:"decision", Trigger:"Y/N/APPROVE/REJECT/OK/NO", Authorization:"actor == requester_id; must quote-reply prompt", Result:"APPROVED/REJECTED; Drive upload + master upsert on approve"},
+        {Command:"decision", Trigger:"Y/N/APPROVE/REJECT/OK/NO", Authorization:"actor == requester_id (or super admin); must quote-reply prompt", Result:"APPROVED/REJECTED; Drive upload + master upsert on approve"},
       ]
     },
     {
