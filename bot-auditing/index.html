@@ -42,7 +42,7 @@ window.DOCS_DATA = {
         <h3>Alur singkat</h3>
         <ol class="steps">
           <li><b>Auditor kirim FORM AUDIT.</b> Bot membuat Audit Case dan memberi <code>REF_AUDIT</code>.</li>
-          <li><b>Yang diaudit menindaklanjuti.</b> Reply pesan audit dengan <b>FORM PERBAIKAN</b> lalu <b>FORM CONFIRMED</b>.</li>
+          <li><b>Yang diaudit menindaklanjuti.</b> Tergantung kategori: <b>FORM PERBAIKAN</b> jika temuan bisa diperbaiki, atau <b>FORM CONFIRMED</b> jika hanya perlu konfirmasi. Keduanya di-reply ke pesan audit.</li>
           <li><b>Reminder otomatis.</b> Selama masih pending, bot mengingatkan tiap hari jam 12:00 (lewati Minggu &amp; hari libur).</li>
         </ol>`
     },
@@ -53,13 +53,13 @@ window.DOCS_DATA = {
   A[Auditor kirim FORM AUDIT] --> B{Punya akses submit dan form lengkap?}
   B -->|Tidak| X[Bot tolak dan sebut alasan]
   B -->|Ya| C[Bot buat Audit Case dengan REF_AUDIT]
-  C --> D[Status perbaikan_required]
-  D --> E[Yang diaudit reply FORM PERBAIKAN]
-  E --> F[Status perbaikan_submitted]
-  F --> G[Reply FORM CONFIRMED]
-  G --> H[Status confirmed - selesai]
-  D --> I{Perlu batal?}
-  I -->|Superior atau auditor| J[FORM CANCEL AUDIT] --> K[Status cancelled]` },
+  C --> D{Kategori bisa diperbaiki?}
+  D -->|Ya| E[Status perbaikan_required]
+  D -->|Tidak| F[Status confirmed_required]
+  E --> G[Audited reply FORM PERBAIKAN] --> H[Status perbaikan_submitted]
+  F --> I[Audited reply FORM CONFIRMED] --> J[Status confirmed - selesai]
+  C --> K{Perlu batal?}
+  K -->|Superior atau auditor| L[FORM CANCEL AUDIT] --> M[Status cancelled]` },
       ]
     },
     {
@@ -167,7 +167,7 @@ CANCELLATION REASON: &lt;alasan&gt;</pre>
             <p>Nomor unik Audit Case, format <code>AUD-2604-CR-0011</code>. Bot yang membuatnya —
                pakai untuk perbaikan, konfirmasi, atau pembatalan.</p></details>
           <details><summary>Audit Sales</summary>
-            <p><code>FORM AUDIT SALES</code> hanya untuk divisi CR, wajib lampirkan foto,
+            <p><code>FORM AUDIT SALES</code> wajib lampirkan bukti berupa foto
                dan wajib mention/cc @Auditor.</p></details>
         </div>`
     },

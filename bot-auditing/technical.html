@@ -30,6 +30,7 @@ window.DOCS_DATA = {
               <li>Receive GOWA webhook, detect audit command</li>
               <li>Parse form → validate → resolve Division + category policy</li>
               <li>Create/advance an Audit Case identified by REF_AUDIT</li>
+              <li>Route by category fixability: correction vs confirmation</li>
               <li>Enforce actor authorization + quote-reply rules</li>
               <li>Persist to the Division's Google Sheet; run daily reminders</li>
             </ul>
@@ -78,7 +79,7 @@ window.DOCS_DATA = {
   CF --> R
   CX --> R
   W -->|reply| G` },
-        { title:"Intake to pending correction", code:`sequenceDiagram
+        { title:"Intake", code:`sequenceDiagram
   participant A as Auditor
   participant B as Bot
   participant Sh as Division Sheet
@@ -87,29 +88,32 @@ window.DOCS_DATA = {
   B->>B: parse form, validate AUDITED CATEGORY AUDITOR
   B->>B: resolve Division and category policy
   B->>Sh: create Audit Case, assign REF_AUDIT
-  B-->>A: AUDIT CASE CREATED plus REF_AUDIT
-  Note over B: status perbaikan_required` },
-        { title:"Correction and confirmation", code:`sequenceDiagram
+  B-->>A: reply REF_AUDIT plus case fields
+  Note over B: fixable gives perbaikan_required else confirmed_required` },
+        { title:"Correction and confirmation (alternative paths)", code:`sequenceDiagram
   participant T as Audited Target
   participant B as Bot
   participant Sh as Division Sheet
-  T->>B: quote-reply FORM PERBAIKAN
-  B->>B: verify quoted REF_AUDIT matches form
-  B->>B: verify actor is audited phone owner
-  B->>Sh: record correction
-  B-->>T: PERBAIKAN TERCATAT status perbaikan_submitted
-  T->>B: quote-reply FORM CONFIRMED
-  B->>Sh: record confirmation
-  B-->>T: CONFIRMED TERCATAT status confirmed` },
+  alt fixable case, status perbaikan_required
+    T->>B: quote-reply FORM PERBAIKAN
+    B->>B: verify quoted REF_AUDIT and audited phone owner
+    B->>Sh: record correction, status perbaikan_submitted
+    Note over B: no chat reply on success
+  else non-fixable case, status confirmed_required
+    T->>B: quote-reply FORM CONFIRMED
+    B->>B: verify quoted REF_AUDIT and audited phone owner
+    B->>Sh: record confirmation, status confirmed
+    Note over B: no chat reply on success
+  end` },
         { title:"Cancellation", code:`flowchart TD
   A[FORM CANCEL AUDIT] --> B{REF_AUDIT found?}
-  B -->|no| E1[reject: REF_AUDIT tidak ditemukan]
-  B -->|already cancelled| E2[AUDIT SUDAH DICANCEL]
+  B -->|no| E1[reject: REF_AUDIT not found]
+  B -->|already cancelled| E2[reply: already been canceled]
   B -->|ok| C{AUDITED CATEGORY CODE match ref?}
-  C -->|no| E3[reject: field tidak match]
+  C -->|no| E3[reject: field does not match]
   C -->|yes| D{actor superior or auditor?}
-  D -->|no| E4[reject: hanya superior atau auditor]
-  D -->|yes| F[AUDIT DICANCEL status cancelled]` },
+  D -->|no| E4[reject: only superior or auditor]
+  D -->|yes| F[reply AUDIT CANCELLED, status cancelled]` },
       ]
     },
     {
@@ -126,11 +130,11 @@ window.DOCS_DATA = {
         <h3>Status lifecycle</h3>
         <table>
           <tr><th>Status</th><th>Meaning</th></tr>
-          <tr><td><code>opened</code></td><td>Initial intake state</td></tr>
-          <tr><td><code>perbaikan_required</code></td><td>Awaiting correction from audited target</td></tr>
-          <tr><td><code>perbaikan_submitted</code></td><td>Correction recorded</td></tr>
-          <tr><td><code>confirmed_required</code></td><td>Awaiting confirmation</td></tr>
-          <tr><td><code>confirmed</code></td><td>Closed / done</td></tr>
+          <tr><td><code>opened</code></td><td>Default/initial state (pending; reminder-eligible)</td></tr>
+          <tr><td><code>perbaikan_required</code></td><td>Fixable finding — awaiting <code>FORM PERBAIKAN</code> from audited target</td></tr>
+          <tr><td><code>perbaikan_submitted</code></td><td>Correction recorded (terminal for fixable findings)</td></tr>
+          <tr><td><code>confirmed_required</code></td><td>Non-fixable finding — awaiting <code>FORM CONFIRMED</code> from audited target</td></tr>
+          <tr><td><code>confirmed</code></td><td>Confirmed / closed</td></tr>
           <tr><td><code>cancelled</code></td><td>Cancelled by superior or auditor (record preserved)</td></tr>
         </table>`
     },
