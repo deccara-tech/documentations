@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="docs-styles.css" />
+</head>
+<body>
+<script>
+/* =====================================================================
+   PANDUAN ADMIN SISTEM — untuk orang yang merawat bot audit lewat tab
+   pengaturan di spreadsheet (config_*). Non-teknis, tanpa istilah IT.
+   Edit hanya DOCS_DATA. Template = docs-styles.css + docs-engine.js
+   (dipakai bersama, jangan diubah).
+   ===================================================================== */
+window.DOCS_DATA = {
+  project: "Audit Bot",
+  audience: "Panduan Admin Sistem",
+  tagline: "Cara mengatur bot audit lewat tab pengaturan di spreadsheet (config_*): siapa yang boleh pakai, dari mana, daftar orang & divisi, tujuan pengingat, dan katalog kategori audit. Semua tanpa menyentuh program.",
+  repo: "https://github.com/deccara-tech/bot-auditing",
+  fallbackVersion: "v0.1.0",
+  crossLink: [
+    { href: "index.html", label: "User Guide" },
+    { href: "technical.html", label: "Technical Docs" },
+  ],
+
+  sections: [
+    {
+      id:"apa", nav:"Apa itu halaman ini", title:"1. Apa itu halaman ini?", type:"html",
+      html:`
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Spreadsheet contoh</strong>
+          <p style="margin:6px 0 0">Lihat contoh isi tiap tab di <a href="https://docs.google.com/spreadsheets/d/12eIAWwpLLGVjRUjfiWV_pcCaI0OR6yobUxIVUqfizcc/edit?gid=2118705206" target="_blank" rel="noopener">spreadsheet contoh ini</a>. <strong>Ini hanya contoh untuk memahami format — bukan data/state produksi.</strong> Jangan jadikan acuan nilai yang sedang aktif; selalu cek spreadsheet asli milikmu.</p>
+        </div>
+        <p class="muted" style="font-size:17px">Kamu mengatur bot lewat <strong>spreadsheet</strong>, bukan lewat program. Ada beberapa tab bernama diawali <code>config_</code> — di situlah kamu mengatur siapa yang boleh pakai bot, dari grup mana, daftar orang yang diaudit, divisi, dan tujuan pengingat.</p>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Perubahan langsung dipakai</strong>
+          <p style="margin:6px 0 0">Setiap kali kamu mengubah tab <code>config_</code>, bot otomatis membaca ulang isinya dan langsung memakainya. <strong>Tidak perlu restart, tidak perlu memanggil teknisi.</strong> Tunggu sebentar saja lalu isi baru sudah aktif.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--brand)">
+          <strong>Yang di luar spreadsheet bukan urusan kamu</strong>
+          <p style="margin:6px 0 0">Hal teknis seperti kata sandi/kredensial, koneksi WhatsApp, dan folder penyimpanan diatur oleh teknisi di tempat lain (bukan di spreadsheet). Kalau itu yang bermasalah, hubungi teknisi. Halaman ini hanya soal tab <code>config_</code>.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Jangan sentuh tab buatan bot</strong>
+          <p style="margin:6px 0 0">Tab seperti <code>audit_case_log</code>, <code>audit_action_log</code>, <code>audit_reminder_log</code>, dan <code>audit_counter</code> diisi otomatis oleh bot. Jangan diubah manual. Kamu hanya mengurus tab yang diawali <code>config_</code> (dan katalog kategori <code>AUDIT LIST</code>, lihat bagian 8).</p>
+        </div>`
+    },
+    {
+      id:"peta", nav:"Peta tab pengaturan", title:"2. Peta tab pengaturan", type:"html",
+      html:`
+        <p>Ada 5 tab pengaturan berawalan <code>config_</code>. Ini isinya masing-masing dalam bahasa sehari-hari:</p>
+        <table>
+          <thead><tr><th>Tab</th><th>Mengatur apa</th></tr></thead>
+          <tbody>
+            <tr><td><code>config_settings</code></td><td>Nama-nama tab penyimpanan &amp; sumber hari libur (jarang diubah)</td></tr>
+            <tr><td><code>config_sender</code></td><td>Dari grup / chat mana bot boleh dipakai</td></tr>
+            <tr><td><code>config_audited_targets</code></td><td>Daftar orang yang diaudit &amp; izin tiap orang (kirim / review / cancel / terima pengingat)</td></tr>
+            <tr><td><code>config_divisions</code></td><td>Spreadsheet penyimpanan untuk tiap divisi</td></tr>
+            <tr><td><code>config_reminder_routes</code></td><td>Ke grup/chat mana pengingat dikirim, per status</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Satu kolom yang ada di hampir semua tab: <code>active</code></strong>
+          <p style="margin:6px 0 0">Kolom <code>active</code> adalah <strong>saklar on/off</strong> tiap baris. Isi <code>TRUE</code> = baris dipakai, <code>FALSE</code> = baris diabaikan (tanpa perlu dihapus). Kalau dikosongkan, baris dianggap <strong>mati</strong> (off). Kolom <code>notes</code> hanya catatan untukmu, bot mengabaikannya.</p>
+        </div>`
+    },
+    {
+      id:"settings", nav:"Pengaturan umum", title:"3. Nama tab penyimpanan (config_settings)", type:"html",
+      html:`
+        <p>Tab ini berisi pasangan <code>key</code> + <code>value</code> untuk menimpa nama tab penyimpanan &amp; sumber hari libur. <strong>Jarang perlu diubah</strong> — biarkan default kecuali teknisi meminta.</p>
+        <table>
+          <thead><tr><th>key</th><th>Mengatur</th><th>Default</th></tr></thead>
+          <tbody>
+            <tr><td><code>case_log_tab</code></td><td>Tab catatan Audit Case</td><td><code>audit_case_log</code></td></tr>
+            <tr><td><code>action_log_tab</code></td><td>Tab catatan tindakan</td><td><code>audit_action_log</code></td></tr>
+            <tr><td><code>reminder_log_tab</code></td><td>Tab catatan pengingat</td><td><code>audit_reminder_log</code></td></tr>
+            <tr><td><code>counter_log_tab</code></td><td>Tab penomoran</td><td><code>audit_counter</code></td></tr>
+            <tr><td><code>category_ref_tab</code></td><td>Tab katalog kategori (lihat bagian 8)</td><td><code>AUDIT LIST</code></td></tr>
+            <tr><td><code>master_data_tab</code></td><td>Tab data induk</td><td><code>DATABASE</code></td></tr>
+            <tr><td><code>holiday_tab</code></td><td>Tab kalender hari libur</td><td><code>national_holidays</code></td></tr>
+            <tr><td><code>holiday_api_url</code></td><td>Sumber data hari libur otomatis (boleh beberapa, pisahkan dengan koma)</td><td>(bawaan)</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Kolom &amp; aturan</strong>
+          <p style="margin:6px 0 0">Kolom: <code>key</code>, <code>value</code>, <code>active</code> (dan <code>notes</code> opsional). Hanya <code>key</code> di tabel atas yang dikenali — <code>key</code> lain diabaikan. Satu <code>key</code> tidak boleh muncul di dua baris aktif; kalau dobel, bot menolak pengaturan baru dan tetap memakai yang lama.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--brand)">
+          <strong>Yang tidak boleh diisi</strong>
+          <p style="margin:6px 0 0"><code>key</code> untuk kredensial <strong>tidak boleh</strong> ditaruh di sini — itu urusan teknisi. Kalau dipaksa, bot menolak seluruh pengaturan.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Tab <code>national_holidays</code> diisi otomatis</strong>
+          <p style="margin:6px 0 0">Tab kalender hari libur diisi otomatis oleh bot dari sumber di <code>holiday_api_url</code>. <strong>Tidak perlu diisi manual</strong> — biarkan bot yang mengurus.</p>
+        </div>`
+    },
+    {
+      id:"sender", nav:"Dari mana", title:"4. Dari mana bot boleh dipakai (config_sender)", type:"html",
+      html:`
+        <p>Tab ini mengatur <strong>tempat</strong> bot boleh dipakai. Isinya berupa baris <code>setting</code> + <code>value</code>:</p>
+        <table>
+          <thead><tr><th>setting</th><th>value</th><th>Artinya</th></tr></thead>
+          <tbody>
+            <tr><td><code>require_group_only</code></td><td><code>TRUE</code> / <code>FALSE</code></td><td><code>TRUE</code> = bot hanya menanggapi di grup, bukan chat pribadi (default <code>TRUE</code>)</td></tr>
+            <tr><td><code>allowed_group_id</code></td><td>ID grup</td><td>Grup yang diizinkan (boleh beberapa baris)</td></tr>
+            <tr><td><code>allowed_chat_id</code></td><td>ID chat</td><td>Chat yang diizinkan (boleh beberapa baris)</td></tr>
+            <tr><td><code>whitelist_number</code></td><td>Nomor WhatsApp</td><td>Nomor yang selalu diizinkan (boleh beberapa baris)</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Orang di daftar audit otomatis diizinkan</strong>
+          <p style="margin:6px 0 0">Semua nomor aktif di <code>config_audited_targets</code> otomatis masuk daftar putih — tidak perlu menuliskannya lagi di sini.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--brand)">
+          <strong>ID grup/chat dari mana?</strong>
+          <p style="margin:6px 0 0">ID grup/chat tidak bisa dilihat langsung dari WhatsApp — butuh alat bantu terpisah. Sistem WhatsApp yang dipakai bot (GOWA) punya halaman web untuk melihat daftar grup beserta ID-nya. Kalau kamu perlu menambah grup baru dan tidak tahu ID-nya, <strong>minta ke teknisi</strong>.</p>
+        </div>`
+    },
+    {
+      id:"targets", nav:"Daftar orang & izin", title:"5. Daftar orang & izin (config_audited_targets)", type:"html",
+      html:`
+        <p>Satu baris = satu orang. Ini menentukan siapa yang diaudit, izinnya, dan ke mana pengingat dikirim. Untuk menambah orang, tambahkan satu baris:</p>
+        <table>
+          <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
+          <tbody>
+            <tr><td><code>code</code></td><td>Kode singkat orang itu (mis. <code>CR001</code>). Dipakai untuk menghubungkan pengingat.</td></tr>
+            <tr><td><code>display_name</code></td><td>Nama tampilan (bebas, untuk memudahkanmu)</td></tr>
+            <tr><td><code>phone</code></td><td>Nomor WhatsApp (mis. <code>628123456789</code>)</td></tr>
+            <tr><td><code>mention_phone</code></td><td>Nomor yang di-<em>mention</em> di grup (opsional; kalau kosong pakai <code>phone</code>)</td></tr>
+            <tr><td><code>division</code></td><td>Kode divisi orang ini (harus cocok dengan <code>config_divisions</code>)</td></tr>
+            <tr><td><code>private_group_chat_id</code></td><td>ID grup pribadi orang ini (opsional, dari teknisi)</td></tr>
+            <tr><td><code>superior_code</code> / <code>superior_phone</code></td><td>Kode &amp; nomor atasan (untuk mention/CC). Boleh lebih dari satu, pisahkan dengan koma (mis. <code>C_JON, V_MEI</code>).</td></tr>
+            <tr><td><code>active</code></td><td><code>TRUE</code> agar orang ini aktif</td></tr>
+            <tr><td><code>can_audit_submit</code></td><td><code>TRUE</code> jika boleh mengirim form audit</td></tr>
+            <tr><td><code>can_audit_review</code></td><td><code>TRUE</code> jika boleh me-review/konfirmasi</td></tr>
+            <tr><td><code>can_audit_cancel</code></td><td><code>TRUE</code> jika boleh membatalkan Audit Case</td></tr>
+            <tr><td><code>can_receive_audit_reminder</code></td><td><code>TRUE</code> jika ikut menerima pengingat</td></tr>
+            <tr><td><code>is_super_admin</code></td><td><code>TRUE</code> untuk admin penuh — <strong>otomatis dapat keempat izin di atas</strong>. Isi hanya jika perlu.</td></tr>
+            <tr><td><code>notes</code></td><td>Catatan bebas</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Menonaktifkan seseorang</strong>
+          <p style="margin:6px 0 0">Jangan hapus barisnya — cukup ubah <code>active</code> jadi <code>FALSE</code>. Nanti kalau dibutuhkan lagi tinggal <code>TRUE</code> kembali.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Nomor &amp; kode tidak boleh dobel</strong>
+          <p style="margin:6px 0 0">Jangan ada dua baris <em>aktif</em> dengan nomor yang sama, atau dua baris aktif dengan <code>code</code> yang sama. Kalau dobel, bot menolak pengaturan baru dan tetap memakai yang lama.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--brand)">
+          <strong>Minimal satu orang untuk tiap izin</strong>
+          <p style="margin:6px 0 0">Harus ada minimal satu orang aktif yang memegang tiap izin (kirim, review, cancel, terima pengingat). Kalau salah satu izin tidak dipegang siapa pun, bot menolak pengaturan. Cara termudah: satu <code>is_super_admin=TRUE</code>.</p>
+        </div>`
+    },
+    {
+      id:"divisions", nav:"Divisi", title:"6. Spreadsheet per divisi (config_divisions)", type:"html",
+      html:`
+        <p>Satu baris = satu divisi. Menentukan spreadsheet penyimpanan tiap divisi.</p>
+        <table>
+          <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
+          <tbody>
+            <tr><td><code>division</code></td><td>Kode divisi, huruf besar (mis. <code>CR</code>). Harus cocok dengan kolom <code>division</code> di daftar orang.</td></tr>
+            <tr><td><code>spreadsheet_id</code></td><td>Spreadsheet tempat data divisi ini disimpan (dari teknisi). <strong>Wajib diisi.</strong></td></tr>
+            <tr><td><code>active</code></td><td><code>TRUE</code> agar divisi ini aktif</td></tr>
+            <tr><td><code>notes</code></td><td>Catatan bebas</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Kolom teknis lain</strong>
+          <p style="margin:6px 0 0">Ada juga kolom nama-nama tab (mis. <code>case_log</code>, <code>master_data</code>) dan <code>credentials_file</code>. <strong>Biarkan kosong / default</strong> kecuali teknisi meminta. Divisi yang sama tidak boleh dobel di dua baris aktif, dan <code>spreadsheet_id</code> tidak boleh kosong.</p>
+        </div>`
+    },
+    {
+      id:"reminders", nav:"Tujuan pengingat", title:"7. Tujuan pengingat (config_reminder_routes)", type:"html",
+      html:`
+        <p>Menentukan ke grup/chat mana pengingat dikirim untuk tiap orang, berdasarkan status Audit Case-nya. Satu baris = satu tujuan.</p>
+        <table>
+          <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
+          <tbody>
+            <tr><td><code>target_code</code></td><td>Kode orang (harus sama dengan <code>code</code> yang aktif di daftar orang)</td></tr>
+            <tr><td><code>status</code></td><td>Status Audit Case yang memicu pengingat (lihat tabel di bawah)</td></tr>
+            <tr><td><code>chat_id</code></td><td>ID grup/chat tujuan pengingat</td></tr>
+            <tr><td><code>active</code></td><td><code>TRUE</code> agar baris ini dipakai</td></tr>
+            <tr><td><code>notes</code></td><td>Catatan bebas</td></tr>
+          </tbody>
+        </table>
+        <p>Nilai <code>status</code> yang boleh dipakai:</p>
+        <table>
+          <thead><tr><th>status</th><th>Artinya</th></tr></thead>
+          <tbody>
+            <tr><td><code>default</code></td><td>Tujuan cadangan untuk semua status</td></tr>
+            <tr><td><code>opened</code></td><td>Case baru dibuka</td></tr>
+            <tr><td><code>perbaikan_required</code></td><td>Menunggu perbaikan</td></tr>
+            <tr><td><code>confirmed_required</code></td><td>Menunggu konfirmasi</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Aturan</strong>
+          <p style="margin:6px 0 0">Kalau <code>status</code> di luar daftar di atas, bot menolak pengaturan. Kalau <code>target_code</code> menunjuk orang yang tidak aktif, bot juga menolak. Baris dengan <code>target_code</code>/<code>status</code>/<code>chat_id</code> kosong diabaikan.</p>
+        </div>`
+    },
+    {
+      id:"katalog", nav:"Katalog kategori", title:"8. Katalog kategori audit (AUDIT LIST)", type:"html",
+      html:`
+        <p>Tab <code>AUDIT LIST</code> berisi daftar kategori temuan audit beserta skor &amp; perilakunya. Tab ini ada di <strong>spreadsheet tiap divisi</strong> (bukan di spreadsheet pengaturan). Satu baris = satu kategori.</p>
+        <table>
+          <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
+          <tbody>
+            <tr><td><code>CATEGORY</code></td><td>Nama kategori (yang diketik user saat mengisi form). <strong>Wajib.</strong></td></tr>
+            <tr><td><code>DIVISI AUDITED</code></td><td>Kode divisi kategori ini berlaku (bisa juga <code>DIVISION</code> / <code>DIVISI</code>). Boleh digabung dengan jenis pakai tanda hubung, mis. <code>CR - OPERATIONAL</code> atau <code>CR - SALES</code>. <strong>Wajib.</strong></td></tr>
+            <tr><td><code>RESPONSE</code></td><td><code>CORRECTION</code> = perlu perbaikan, atau <code>CONFIRMATION</code> = perlu konfirmasi (default). Nilai lain → baris diabaikan.</td></tr>
+            <tr><td><code>SCORE</code></td><td>Angka skor dasar kategori</td></tr>
+            <tr><td><code>SCORING METHOD</code></td><td><code>CODE</code> (default) = skor dikali jumlah kode, atau <code>FINDING</code> = skor apa adanya</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand)">
+          <strong>Jenis audit (OPERATIONAL / SALES)</strong>
+          <p style="margin:6px 0 0">Jenis ditulis di belakang divisi pada <code>DIVISI AUDITED</code> (mis. <code>CR - OPERATIONAL</code>, <code>CR - SALES</code>). Kalau tidak ditulis, dianggap <code>OPERATIONAL</code>; <code>ADMIN</code> juga dihitung <code>OPERATIONAL</code>. Divisi tanpa jenis (mis. <code>OS</code>, <code>TCO</code>, <code>DM</code>) berarti <code>OPERATIONAL</code>.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>CORRECTION vs CONFIRMATION</strong>
+          <p style="margin:6px 0 0"><code>RESPONSE=CORRECTION</code> menandai kategori yang <em>bisa diperbaiki</em> (butuh form perbaikan). <code>CONFIRMATION</code> hanya butuh konfirmasi. Kalau kolom dikosongkan, bot memakai <code>CONFIRMATION</code>.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Aturan</strong>
+          <p style="margin:6px 0 0"><code>SCORING METHOD</code> harus <code>CODE</code> atau <code>FINDING</code> — nilai lain membuat bot menolak. Satu <code>CATEGORY</code> tidak boleh muncul dua kali dengan skor/perilaku berbeda. Kalau user salah ketik kategori, bot menyarankan yang paling mirip dari daftar ini.</p>
+        </div>`
+    },
+    {
+      id:"aturan", nav:"Aturan emas", title:"9. Aturan emas & kesalahan umum", type:"html",
+      html:`
+        <div class="grid2">
+          <div class="card" style="border-left:4px solid var(--brand-2)">
+            <strong>✓ Lakukan</strong>
+            <p style="margin:6px 0 0">Selalu isi kolom <code>active</code>. Untuk mematikan sesuatu, ubah ke <code>FALSE</code> — jangan hapus barisnya.</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--brand-2)">
+            <strong>✓ Lakukan</strong>
+            <p style="margin:6px 0 0">Sebelum mengubah banyak baris, salin dulu tab-nya sebagai cadangan (klik kanan tab → Duplicate).</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--brand-2)">
+            <strong>✓ Lakukan</strong>
+            <p style="margin:6px 0 0">Pastikan hanya ada <strong>satu baris aktif</strong> per nomor/kode orang, kunci pengaturan, divisi, atau kategori.</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--accent)">
+            <strong>✕ Hindari</strong>
+            <p style="margin:6px 0 0">Mengubah atau menghapus <strong>baris judul (header)</strong> paling atas tiap tab. Nama kolom harus tetap.</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--accent)">
+            <strong>✕ Hindari</strong>
+            <p style="margin:6px 0 0">Mengedit tab buatan bot (<code>audit_case_log</code>, <code>audit_action_log</code>, <code>audit_reminder_log</code>, <code>audit_counter</code>).</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--accent)">
+            <strong>✕ Hindari</strong>
+            <p style="margin:6px 0 0">Membuat dua baris aktif yang sama (dobel). Bot akan menolak seluruh pengaturan baru sampai diperbaiki.</p>
+          </div>
+        </div>`
+    },
+    {
+      id:"cek", nav:"Cek cepat", title:"10. Kalau ada yang aneh — cek cepat", type:"html",
+      html:`
+        <table>
+          <thead><tr><th>Gejala</th><th>Coba periksa</th></tr></thead>
+          <tbody>
+            <tr><td>Seseorang tidak bisa pakai bot</td><td>Baris orang itu di <code>config_audited_targets</code> <code>active=TRUE</code>? Izin (<code>can_audit_*</code>) sesuai? Nomor benar &amp; tidak dobel?</td></tr>
+            <tr><td>Bot diam di grup tertentu</td><td>Grup itu terdaftar di <code>config_sender</code> (<code>allowed_group_id</code>)? <code>require_group_only</code> sesuai?</td></tr>
+            <tr><td>Pengingat tidak sampai</td><td><code>config_reminder_routes</code>: <code>target_code</code> cocok &amp; aktif? <code>chat_id</code> benar? <code>status</code> valid?</td></tr>
+            <tr><td>Kategori audit ditolak</td><td>Kategori ada di <code>AUDIT LIST</code> untuk divisi itu? <code>SCORING METHOD</code> = <code>CODE</code>/<code>FINDING</code>?</td></tr>
+            <tr><td>Data divisi tidak tersimpan</td><td><code>config_divisions</code>: divisi aktif &amp; <code>spreadsheet_id</code> benar? Kode divisi cocok dengan daftar orang?</td></tr>
+            <tr><td>Pengaturan baru tidak terpakai</td><td>Ada baris dobel atau nilai salah? Bot menolak dan memakai yang lama — perbaiki lalu tunggu sebentar.</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Uji cepat</strong>
+          <p style="margin:6px 0 0">Ketik <kbd>!check</kbd> di WhatsApp — bot membalas status pengaturan yang sedang ia pakai. Cara tercepat memastikan pengaturan terbaca dengan benar.</p>
+        </div>
+        <p class="muted">Kalau masalahnya di luar tab <code>config_</code> (bot mati total, tidak terhubung WhatsApp, file tidak tersimpan), hubungi teknisi.</p>`
+    },
+  ],
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="docs-engine.js"></script>
+</body>
+</html>
