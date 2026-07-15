@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,91 +13,91 @@
    ===================================================================== */
 window.DOCS_DATA = {
   project: "Document Bot",
-  audience: "User Guide",
-  tagline: "Create invoices, quotations, and receipts straight from WhatsApp — no app to install.",
+  audience: "Panduan Pengguna",
+  tagline: "Buat invoice, penawaran, dan kwitansi langsung dari WhatsApp — tanpa perlu instal aplikasi.",
   repo: "https://github.com/deccara-tech/bot-document-generator",
   fallbackVersion: "v0.3.0",
   crossLink: [
-    { href: "technical.html", label: "Technical Docs" },
+    { href: "technical.html", label: "Dokumentasi Teknis" },
     { href: "panduan-pengisian-database.html", label: "Panduan Database" },
     { href: "panduan-admin-sistem.html", label: "Panduan Admin Sistem" },
   ],
 
   sections: [
     {
-      id:"start", nav:"Getting Started", title:"Getting Started", type:"html",
+      id:"start", nav:"Memulai", title:"Memulai", type:"html",
       html:`
         <div class="grid2">
           <div class="card">
-            <h3>What is this?</h3>
-            <p>A WhatsApp assistant that turns a simple message into a ready-to-send
-            PDF document (Invoice, Quotation, or Receipt) and keeps a record for you.</p>
+            <h3>Apa ini?</h3>
+            <p>Asisten WhatsApp yang mengubah pesan sederhana menjadi dokumen PDF
+            siap kirim (Invoice, Penawaran, atau Kwitansi) dan menyimpan catatannya untuk Anda.</p>
           </div>
           <div class="card">
-            <h3>Before you start</h3>
+            <h3>Sebelum mulai</h3>
             <ul style="margin:0;padding-left:18px">
-              <li>Your phone number must be registered by an admin.</li>
-              <li>You send messages in the approved WhatsApp group.</li>
-              <li>Type <kbd>!check</kbd> anytime to see what you're allowed to do.</li>
+              <li>Nomor telepon Anda harus didaftarkan oleh admin.</li>
+              <li>Anda mengirim pesan di grup WhatsApp yang telah disetujui.</li>
+              <li>Ketik <kbd>!check</kbd> kapan saja untuk melihat apa yang boleh Anda lakukan.</li>
             </ul>
           </div>
         </div>
-        <h3>The 3-step routine</h3>
+        <h3>Rutinitas 3 langkah</h3>
         <ol class="steps">
-          <li><b>Send the form.</b> Fill in the request form and send it as one message.</li>
-          <li><b>Get the document.</b> The bot replies with your PDF and a confirmation card.</li>
-          <li><b>Approve or reject.</b> Reply to that card with <b>Y</b> (approve) or <b>N</b> (reject).
-              Approved documents are saved automatically.</li>
+          <li><b>Kirim formulir.</b> Isi formulir permintaan dan kirim sebagai satu pesan.</li>
+          <li><b>Terima dokumen.</b> Bot membalas dengan PDF Anda dan kartu konfirmasi.</li>
+          <li><b>Setujui atau tolak.</b> Balas kartu tersebut dengan <b>Y</b> (setujui) atau <b>N</b> (tolak).
+              Dokumen yang disetujui disimpan otomatis.</li>
         </ol>`
     },
     {
-      id:"flow", nav:"How It Works", title:"How It Works", type:"diagrams",
+      id:"flow", nav:"Cara Kerja", title:"Cara Kerja", type:"diagrams",
       items:[
-        { title:"The whole journey, start to finish", code:`flowchart TD
-  A[You send the form in WhatsApp] --> B{Are you registered?}
-  B -->|No| X[Bot: you are not registered - ask an admin]
-  B -->|Yes| C{Is the form complete?}
-  C -->|No| Y[Bot lists what is missing - fix and resend]
-  C -->|Yes| D{Is another document still waiting?}
-  D -->|Yes| Z[Bot: approve or reject the waiting one first]
-  D -->|No| E[Bot creates your PDF document]
-  E --> F[Bot sends the PDF plus a confirmation card]
-  F --> G{You reply to the card}
-  G -->|Y approve| H[Saved to Google Drive and recorded in the sheet]
-  G -->|N reject| I[Document cancelled]
-  H --> J{Need a change later?}
+        { title:"Seluruh alur, dari awal hingga akhir", code:`flowchart TD
+  A[Anda mengirim formulir di WhatsApp] --> B{Apakah Anda terdaftar?}
+  B -->|Tidak| X[Bot: Anda belum terdaftar - hubungi admin]
+  B -->|Ya| C{Apakah formulir lengkap?}
+  C -->|Tidak| Y[Bot menampilkan yang kurang - perbaiki dan kirim ulang]
+  C -->|Ya| D{Apakah ada dokumen lain yang masih menunggu?}
+  D -->|Ya| Z[Bot: setujui atau tolak yang menunggu dulu]
+  D -->|Tidak| E[Bot membuat dokumen PDF Anda]
+  E --> F[Bot mengirim PDF beserta kartu konfirmasi]
+  F --> G{Anda membalas kartu tersebut}
+  G -->|Y setujui| H[Disimpan ke Google Drive dan dicatat di sheet]
+  G -->|N tolak| I[Dokumen dibatalkan]
+  H --> J{Perlu perubahan nanti?}
   I --> J
-  J -->|Yes within 30 days| K[Send REVISI with the document number] --> E
-  J -->|No| L[Done]` },
+  J -->|Ya dalam 30 hari| K[Kirim REVISI dengan nomor dokumen] --> E
+  J -->|Tidak| L[Selesai]` },
       ]
     },
     {
-      id:"try", nav:"Try It Live", title:"Try It Live", type:"demo",
-      intro:"Pick a situation below and watch how the chat looks — exactly what you send and what the bot replies.",
+      id:"try", nav:"Coba Langsung", title:"Coba Langsung", type:"demo",
+      intro:"Pilih situasi di bawah dan lihat tampilan chat-nya — persis apa yang Anda kirim dan apa yang dibalas bot.",
       cases:[
         {
-          title:"Check what I can do (!check)",
-          note:"Sends back your name and permissions. Handy if something isn't working.",
+          title:"Cek apa yang bisa saya lakukan (!check)",
+          note:"Mengembalikan nama dan izin Anda. Berguna jika ada yang tidak berfungsi.",
           steps:[
             {from:"user", text:"!check"},
             {typing:900},
-            {from:"bot", text:"Hello, this is your bot access config:\n\nDisplay Name: Caesario Dito\nPhone: 6281332046077\nPrivate Group: -\n\nAccess:\n- Request Document: TRUE\n- Finance / Approver: TRUE\n- Super Admin: FALSE"},
+            {from:"bot", text:"Halo, ini konfigurasi akses bot Anda:\n\nNama Tampilan: Caesario Dito\nTelepon: 6281332046077\nGrup Privat: -\n\nAkses:\n- Request Document: TRUE\n- Finance / Approver: TRUE\n- Super Admin: FALSE"},
           ]
         },
         {
-          title:"Request an Invoice",
-          note:"Fill the form and send. You get a PDF plus a confirmation card to approve.",
+          title:"Minta Invoice",
+          note:"Isi formulir dan kirim. Anda mendapat PDF beserta kartu konfirmasi untuk disetujui.",
           steps:[
             {from:"user", text:"FORM REQUEST DOCUMENT\nNAME: PT Web Media Barindo\nCATEGORY: INV\nLANGUAGE: BAHASA\nCOMPANY: WBM\nBRANCH: WEST\nDATE: 05 Jan 2025\nNOTES :\n\nPURCHASE DETAILS\n3500K (C7158-W) + 750K (TAILORING)\nTOTAL: 4,250,000\n\nREK BCA / 1234567890 / WOLTER BATIK MAHATARA PT"},
             {typing:1400},
-            {from:"bot", kind:"file", fileName:"INV-2521056.WBM.CRM.pdf", text:"Your invoice is ready"},
+            {from:"bot", kind:"file", fileName:"INV-2521056.WBM.CRM.pdf", text:"Invoice Anda sudah siap"},
             {typing:900},
             {from:"bot", text:"FORM REQUEST DOCUMENT\nCLIENT: PT Web Media Barindo\nCATEGORY: INV\nLANGUAGE: BAHASA\nCOMPANY: WBM\nBRANCH: WEST\nDATE: 05 Jan 2025\nNOTES :\n\nPURCHASE DETAILS\n3500K (C7158-W)\n750K (TAILORING)\n\nTOTAL: 4,250,000\n\nREK BCA / 1234567890 / WOLTER BATIK MAHATARA PT\n\n----\nGENERATED UNIQUE_CODE_NUMBER: INV-2521056.WBM.CRM\n@6281332046077\n\nReply dengan quote pesan ini:\nY = Approve\nN = Reject"},
           ]
         },
         {
-          title:"Approve the document",
-          note:"Reply to the confirmation card with Y. Only the person who requested it can approve.",
+          title:"Setujui dokumen",
+          note:"Balas kartu konfirmasi dengan Y. Hanya orang yang mengajukan yang bisa menyetujui.",
           steps:[
             {from:"user", quote:"GENERATED UNIQUE_CODE_NUMBER: INV-2521056.WBM.CRM", text:"Y"},
             {typing:1200},
@@ -105,8 +105,8 @@ window.DOCS_DATA = {
           ]
         },
         {
-          title:"Reject the document",
-          note:"Reply with N and (optionally) a short reason.",
+          title:"Tolak dokumen",
+          note:"Balas dengan N dan (opsional) alasan singkat.",
           steps:[
             {from:"user", quote:"GENERATED UNIQUE_CODE_NUMBER: INV-2521056.WBM.CRM", text:"N harga belum sesuai"},
             {typing:1100},
@@ -114,19 +114,19 @@ window.DOCS_DATA = {
           ]
         },
         {
-          title:"Fix / revise a document",
-          note:"Start with REVISI and the document number, then send the corrected form. Allowed up to 30 days.",
+          title:"Perbaiki / revisi dokumen",
+          note:"Mulai dengan REVISI dan nomor dokumen, lalu kirim formulir yang sudah diperbaiki. Diizinkan hingga 30 hari.",
           steps:[
             {from:"user", text:"REVISI : INV-2521056.WBM.CRM\nFORM REQUEST DOCUMENT\nNAME: PT Web Media Barindo\nCATEGORY: INV\nLANGUAGE: BAHASA\nCOMPANY: WBM\nBRANCH: WEST\nDATE: 06 Jan 2025\nNOTES :\n\nPURCHASE DETAILS\n3000K (C7158-W) + 750K (TAILORING)\nTOTAL: 3,750,000\n\nREK BCA / 1234567890 / WOLTER BATIK MAHATARA PT"},
             {typing:1400},
-            {from:"bot", kind:"file", fileName:"INV-2521056.WBM.CRM.pdf", text:"Revised invoice ready"},
+            {from:"bot", kind:"file", fileName:"INV-2521056.WBM.CRM.pdf", text:"Invoice revisi siap"},
             {typing:800},
             {from:"bot", text:"FORM REQUEST DOCUMENT\nCLIENT: PT Web Media Barindo\nTOTAL: 3,750,000\n\n----\nGENERATED UNIQUE_CODE_NUMBER: INV-2521056.WBM.CRM\n\nReply dengan quote pesan ini:\nY = Approve\nN = Reject"},
           ]
         },
         {
-          title:"“A document is still waiting”",
-          note:"Only one document can wait for approval at a time. Approve or reject the current one first.",
+          title:"“Masih ada dokumen yang menunggu”",
+          note:"Hanya satu dokumen yang bisa menunggu persetujuan dalam satu waktu. Setujui atau tolak yang sekarang dulu.",
           steps:[
             {from:"user", text:"FORM REQUEST DOCUMENT\nNAME: PT Lain\nCATEGORY: QUO\n..."},
             {typing:900},
@@ -134,17 +134,17 @@ window.DOCS_DATA = {
           ]
         },
         {
-          title:"“You’re not registered”",
-          note:"Ask an admin to add your number if you see this.",
+          title:"“Anda belum terdaftar”",
+          note:"Minta admin menambahkan nomor Anda jika melihat ini.",
           steps:[
             {from:"user", text:"FORM REQUEST DOCUMENT\nNAME: ...\nCATEGORY: INV"},
             {typing:800},
-            {from:"bot", text:"Hello, your phone number is not registered for bot access.\n\nPlease ask an admin to check the config_roles tab.\nDetected phone: 6289900001111"},
+            {from:"bot", text:"Halo, nomor telepon Anda belum terdaftar untuk akses bot.\n\nSilakan minta admin memeriksa tab config_roles.\nNomor terdeteksi: 6289900001111"},
           ]
         },
         {
-          title:"“Form isn’t complete”",
-          note:"The bot lists exactly what’s missing. Fix those lines and resend.",
+          title:"“Formulir belum lengkap”",
+          note:"Bot menampilkan persis apa yang kurang. Perbaiki baris tersebut dan kirim ulang.",
           steps:[
             {from:"user", text:"FORM REQUEST DOCUMENT\nNAME:\nCATEGORY: XYZ\nPURCHASE DETAILS"},
             {typing:900},
@@ -154,54 +154,54 @@ window.DOCS_DATA = {
       ]
     },
     {
-      id:"form", nav:"The Request Form", title:"The Request Form", type:"html",
+      id:"form", nav:"Formulir Permintaan", title:"Formulir Permintaan", type:"html",
       html:`
-        <p>Send this as <b>one single message</b>. Copy the template and replace the parts in &lt; &gt;.</p>
+        <p>Kirim ini sebagai <b>satu pesan tunggal</b>. Salin templat dan ganti bagian di dalam &lt; &gt;.</p>
         <pre>FORM REQUEST DOCUMENT
-NAME: &lt;client name&gt;
-CATEGORY: &lt;QUO = quotation | INV = invoice | RCP = receipt&gt;
-LANGUAGE: &lt;BAHASA or ENGLISH&gt;
+NAME: &lt;nama klien&gt;
+CATEGORY: &lt;QUO = penawaran | INV = invoice | RCP = kwitansi&gt;
+LANGUAGE: &lt;BAHASA atau ENGLISH&gt;
 COMPANY: &lt;WBN | WBD | WBM | WBJ | WBK | WBB&gt;
 BRANCH: &lt;WEST | SOUTH | EAST | NORTH | CENTER&gt;
-DATE: &lt;date shown on the document&gt;
-NOTES : &lt;optional message; leave blank for default terms&gt;
+DATE: &lt;tanggal yang tampil di dokumen&gt;
+NOTES : &lt;pesan opsional; kosongkan untuk syarat default&gt;
 
 PURCHASE DETAILS
-&lt;price&gt; (&lt;item code or name&gt;)
-TOTAL: &lt;total amount&gt;
-DP: &lt;down payment&gt;          (optional)
-REK &lt;bank / account no / account name&gt;</pre>
+&lt;harga&gt; (&lt;kode atau nama barang&gt;)
+TOTAL: &lt;jumlah total&gt;
+DP: &lt;uang muka&gt;          (opsional)
+REK &lt;bank / no rekening / nama pemilik&gt;</pre>
         <div class="grid2">
-          <details open><summary>Writing prices</summary>
-            <p><kbd>2279K</kbd> means 2,279,000. Put several items on one line with a
-               <kbd>+</kbd>, e.g. <code>3500K (C7158-W) + 750K (TAILORING)</code>.</p></details>
-          <details><summary>What is the document number?</summary>
-            <p>The bot creates it for you, like <code>INV-2521056.WBM.CRM</code>. Use it when you
-               need to revise a document later.</p></details>
+          <details open><summary>Menulis harga</summary>
+            <p><kbd>2279K</kbd> berarti 2.279.000. Tulis beberapa barang dalam satu baris dengan
+               <kbd>+</kbd>, misalnya <code>3500K (C7158-W) + 750K (TAILORING)</code>.</p></details>
+          <details><summary>Apa itu nomor dokumen?</summary>
+            <p>Bot membuatnya untuk Anda, seperti <code>INV-2521056.WBM.CRM</code>. Gunakan saat Anda
+               perlu merevisi dokumen di kemudian hari.</p></details>
         </div>`
     },
     {
-      id:"cheats", nav:"Quick Reference", title:"Quick Reference", type:"commands",
-      columns:["Type this","When to use it","What the bot does"],
+      id:"cheats", nav:"Referensi Cepat", title:"Referensi Cepat", type:"commands",
+      columns:["Ketik ini","Kapan digunakan","Apa yang dilakukan bot"],
       rows:[
-        {"Type this":"!check", "When to use it":"To see your permissions", "What the bot does":"Shows your name and what you can do."},
-        {"Type this":"FORM REQUEST DOCUMENT", "When to use it":"To create a new document", "What the bot does":"Sends the PDF + a card to approve."},
-        {"Type this":"Y", "When to use it":"Reply to the card to approve", "What the bot does":"Saves and files the document."},
-        {"Type this":"N", "When to use it":"Reply to the card to reject", "What the bot does":"Cancels it (add a reason if you like)."},
-        {"Type this":"REVISI : <doc number>", "When to use it":"To correct a document", "What the bot does":"Re-creates it (within 30 days)."},
+        {"Ketik ini":"!check", "Kapan digunakan":"Untuk melihat izin Anda", "Apa yang dilakukan bot":"Menampilkan nama dan apa yang bisa Anda lakukan."},
+        {"Ketik ini":"FORM REQUEST DOCUMENT", "Kapan digunakan":"Untuk membuat dokumen baru", "Apa yang dilakukan bot":"Mengirim PDF + kartu untuk disetujui."},
+        {"Ketik ini":"Y", "Kapan digunakan":"Balas kartu untuk menyetujui", "Apa yang dilakukan bot":"Menyimpan dan mengarsipkan dokumen."},
+        {"Ketik ini":"N", "Kapan digunakan":"Balas kartu untuk menolak", "Apa yang dilakukan bot":"Membatalkannya (tambahkan alasan bila mau)."},
+        {"Ketik ini":"REVISI : <nomor dokumen>", "Kapan digunakan":"Untuk memperbaiki dokumen", "Apa yang dilakukan bot":"Membuat ulang (dalam 30 hari)."},
       ]
     },
     {
       id:"faq", nav:"FAQ", title:"FAQ", type:"html",
       html:`
-        <details><summary>The bot didn’t reply — what now?</summary>
-          <p>Send <kbd>!check</kbd>. If you get no reply or “not registered”, ask an admin. Otherwise wait a moment and resend the form.</p></details>
-        <details><summary>Can I approve someone else’s document?</summary>
-          <p>No. Only the person who requested a document can approve or reject it.</p></details>
-        <details><summary>I made a mistake after approving.</summary>
-          <p>Use <b>REVISI</b> with the document number to send a corrected version, within 30 days of the original.</p></details>
-        <details><summary>Where do approved documents go?</summary>
-          <p>They’re automatically saved to Google Drive and logged in the company’s sheet. You don’t need to do anything.</p></details>`
+        <details><summary>Bot tidak membalas — sekarang bagaimana?</summary>
+          <p>Kirim <kbd>!check</kbd>. Jika tidak ada balasan atau muncul “belum terdaftar”, hubungi admin. Jika tidak, tunggu sebentar dan kirim ulang formulir.</p></details>
+        <details><summary>Bisakah saya menyetujui dokumen orang lain?</summary>
+          <p>Tidak. Hanya orang yang mengajukan dokumen yang bisa menyetujui atau menolaknya.</p></details>
+        <details><summary>Saya salah setelah menyetujui.</summary>
+          <p>Gunakan <b>REVISI</b> dengan nomor dokumen untuk mengirim versi yang diperbaiki, dalam 30 hari sejak dokumen asli.</p></details>
+        <details><summary>Ke mana dokumen yang disetujui disimpan?</summary>
+          <p>Otomatis disimpan ke Google Drive dan dicatat di sheet perusahaan. Anda tidak perlu melakukan apa pun.</p></details>`
     },
   ],
 };

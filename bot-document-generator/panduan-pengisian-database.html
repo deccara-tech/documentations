@@ -28,10 +28,19 @@ window.DOCS_DATA = {
     {
       id:"apa", nav:"Apa itu ini?", title:"1. Apa itu database ini?", type:"html",
       html:`
-        <p class="muted" style="font-size:17px">File <code>current-data.csv</code> adalah salinan (mirror) dari tab <code>DATABASE</code> pada spreadsheet operasional — "kamus" yang dipakai bot untuk mengubah kode singkat menjadi tulisan lengkap di dokumen.</p>
+        <p class="muted" style="font-size:17px">Database ini adalah tab <code>DATABASE</code> pada <a href="https://docs.google.com/spreadsheets/d/1hZuNMEMzjwh6rQq_BavhD01bcCngiD_QVNKiZxouLHw/edit?gid=948128648#gid=948128648" target="_blank" rel="noopener">spreadsheet operasional</a> — "kamus" yang dipakai bot untuk mengubah kode singkat menjadi tulisan lengkap di dokumen. Isinya kira-kira seperti ini:</p>
+        <table>
+          <tr><th>rule_type</th><th>match_key</th><th>description_id</th><th>code_front</th><th>back_code</th><th>code_prefix</th><th>code_suffix</th><th>needs_running</th></tr>
+          <tr><td>item_name</td><td>BATIK_CAP</td><td>Batik Cap</td><td></td><td></td><td>BC</td><td></td><td>TRUE</td></tr>
+          <tr><td>item_name</td><td>TAILORING</td><td>Layanan Bespoke Tailoring Kemeja</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>item_name</td><td>KAIN_COUPLE_SUTRA_BATIK_TULIS</td><td>Kain Couple Sutra Batik Tulis</td><td>C</td><td>S</td><td>CP</td><td>S</td><td>TRUE</td></tr>
+          <tr><td>exact_code</td><td>JL</td><td>Jahit Luar</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>structured_code</td><td></td><td>Kain Katun Batik Tulis</td><td></td><td>C</td><td></td><td></td><td></td></tr>
+        </table>
+        <p class="muted" style="font-size:13px">Cuplikan di atas hanya sebagian; data lengkap ada di <a href="https://docs.google.com/spreadsheets/d/1hZuNMEMzjwh6rQq_BavhD01bcCngiD_QVNKiZxouLHw/edit?gid=948128648#gid=948128648" target="_blank" rel="noopener">spreadsheet</a>.</p>
         <div class="card" style="border-left:4px solid var(--brand-2)">
           <strong>Sumber data yang sebenarnya dibaca bot</strong>
-          <p style="margin:6px 0 0">Saat berjalan, bot membaca tab bernama <code>DATABASE</code> (kolom A–L) di spreadsheet <em>tiap company</em> (WBM, WBD, WBN, dst.), bukan file CSV ini. Data di-cache ±60 detik. Edit dilakukan di tab <code>DATABASE</code>; CSV ini hanya cermin untuk dibaca/diskusi.</p>
+          <p style="margin:6px 0 0">Saat berjalan, bot membaca tab bernama <code>DATABASE</code> (kolom A–L) di spreadsheet <em>tiap company</em> (WBM, WBD, WBN, dst.). Data di-cache ±60 detik. Semua edit dilakukan langsung di tab <code>DATABASE</code> pada spreadsheet.</p>
         </div>
         <p>Ketika operator mengirim form lewat WhatsApp, baris pembelian ditulis seperti ini:</p>
         <div class="card"><code>2279K (V8172C) + 750K (TAILORING)</code></div>
@@ -39,7 +48,7 @@ window.DOCS_DATA = {
         <div class="card">Kain Katun Batik Tulis (V8172C) &nbsp;—&nbsp; Rp 2.279.000</div>
         <div class="card" style="border-left:4px solid var(--brand)">
           <strong>Penting dipahami</strong>
-          <p style="margin:6px 0 0">Harga TIDAK diambil dari database. Harga selalu diambil dari angka yang diketik operator (<code>2279K</code> → Rp 2.279.000). Kolom harga di CSV hanya katalog referensi.</p>
+          <p style="margin:6px 0 0">Harga TIDAK diambil dari database. Harga selalu diambil dari angka yang diketik operator (<code>2279K</code> → Rp 2.279.000). Kolom harga di sheet hanya katalog referensi.</p>
         </div>`
     },
     {
@@ -274,7 +283,7 @@ REK Mandiri 9988776655 - Batik Wolter</pre>
           <tr><td>structured_code</td><td></td><td>Kain Tenun Sutra</td><td>T</td><td>L</td><td></td><td></td><td></td></tr>
         </table>
         <ol class="steps">
-          <li>Buka tab <code>DATABASE</code> di spreadsheet company yang relevan (bukan file CSV).</li>
+          <li>Buka tab <code>DATABASE</code> di <a href="https://docs.google.com/spreadsheets/d/1hZuNMEMzjwh6rQq_BavhD01bcCngiD_QVNKiZxouLHw/edit?gid=948128648#gid=948128648" target="_blank" rel="noopener">spreadsheet</a> company yang relevan.</li>
           <li>Tambah baris <code>item_name</code> agar operator bisa mengetik nama barang.</li>
           <li>Tambah baris <code>structured_code</code> agar kode <code>TP…L</code> dikenali bot.</li>
           <li>Tunggu ±60 detik (masa cache), lalu tes dengan 1 request kecil.</li>
