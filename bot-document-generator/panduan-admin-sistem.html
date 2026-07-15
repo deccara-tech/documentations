@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="docs-styles.css" />
+</head>
+<body>
+<script>
+/* =====================================================================
+   PANDUAN ADMIN SISTEM — untuk orang yang merawat bot lewat tab
+   pengaturan di spreadsheet (config_*). Non-teknis, tanpa istilah IT.
+   Edit hanya DOCS_DATA. Template = docs-styles.css + docs-engine.js
+   (dipakai bersama, jangan diubah).
+   ===================================================================== */
+window.DOCS_DATA = {
+  project: "Document Bot",
+  audience: "Panduan Admin Sistem",
+  tagline: "Cara mengatur bot lewat tab pengaturan di spreadsheet (config_*): siapa yang boleh pakai, dari mana, daftar perusahaan, cabang, dan aturan umum. Semua tanpa menyentuh program.",
+  repo: "https://github.com/deccara-tech/bot-document-generator",
+  fallbackVersion: "v0.3.0",
+  crossLink: [
+    { href: "index.html", label: "User Guide" },
+    { href: "technical.html", label: "Technical Docs" },
+    { href: "panduan-pengisian-database.html", label: "Panduan Database" },
+  ],
+
+  sections: [
+    {
+      id:"apa", nav:"Apa itu halaman ini", title:"1. Apa itu halaman ini?", type:"html",
+      html:`
+        <p class="muted" style="font-size:17px">Kamu mengatur bot lewat <strong>spreadsheet</strong>, bukan lewat program. Ada beberapa tab bernama diawali <code>config_</code> — di situlah kamu mengatur siapa yang boleh pakai bot, dari grup mana, perusahaan apa saja, cabang, dan aturan umum.</p>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Perubahan langsung dipakai</strong>
+          <p style="margin:6px 0 0">Setiap kali kamu mengubah tab <code>config_</code>, bot otomatis membaca ulang isinya dan langsung memakainya. <strong>Tidak perlu restart, tidak perlu memanggil teknisi.</strong> Tunggu sebentar saja lalu isi baru sudah aktif.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--brand)">
+          <strong>Yang di luar spreadsheet bukan urusan kamu</strong>
+          <p style="margin:6px 0 0">Hal teknis seperti kata sandi/kredensial, koneksi WhatsApp, dan folder penyimpanan file diatur oleh teknisi di tempat lain (bukan di spreadsheet). Kalau itu yang bermasalah, hubungi teknisi. Halaman ini hanya soal tab <code>config_</code>.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Jangan sentuh tab buatan bot</strong>
+          <p style="margin:6px 0 0">Tab seperti <code>request_log</code>, <code>decision_log</code>, <code>counter_global</code>, <code>QUO</code>, <code>INV</code>, <code>RCP</code>, dan <code>DATABASE</code> diisi otomatis oleh bot. Jangan diubah manual. Kamu hanya mengurus tab yang diawali <code>config_</code>.</p>
+        </div>`
+    },
+    {
+      id:"peta", nav:"Peta tab pengaturan", title:"2. Peta tab pengaturan", type:"html",
+      html:`
+        <p>Ada 6 tab pengaturan. Ini isinya masing-masing dalam bahasa sehari-hari:</p>
+        <table>
+          <thead><tr><th>Tab</th><th>Mengatur apa</th></tr></thead>
+          <tbody>
+            <tr><td><code>config_roles</code></td><td>Siapa saja yang boleh pakai bot &amp; izinnya (minta dokumen / finance / admin)</td></tr>
+            <tr><td><code>config_sender</code></td><td>Dari grup / chat mana bot boleh dipakai</td></tr>
+            <tr><td><code>config_companies</code></td><td>Daftar perusahaan, kode penomoran, &amp; spreadsheet-nya masing-masing</td></tr>
+            <tr><td><code>config_locations</code></td><td>Kata cabang → alamat lengkap yang tercetak di dokumen</td></tr>
+            <tr><td><code>config_staff</code></td><td>Rekening mana ditandai (di-mention) ke staf mana</td></tr>
+            <tr><td><code>config_settings</code></td><td>Aturan umum: pengingat &amp; batas waktu revisi</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Satu kolom yang ada di hampir semua tab: <code>active</code></strong>
+          <p style="margin:6px 0 0">Kolom <code>active</code> adalah <strong>saklar on/off</strong> tiap baris. Isi <code>TRUE</code> = baris dipakai, <code>FALSE</code> = baris diabaikan (tanpa perlu dihapus). Kolom <code>notes</code> hanya catatan untukmu, bot mengabaikannya.</p>
+        </div>`
+    },
+    {
+      id:"roles", nav:"Siapa boleh pakai", title:"3. Siapa yang boleh pakai bot (config_roles)", type:"html",
+      html:`
+        <p>Satu baris = satu orang. Untuk menambah orang baru, tambahkan satu baris:</p>
+        <table>
+          <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
+          <tbody>
+            <tr><td><code>phone</code></td><td>Nomor WhatsApp orang itu (mis. <code>628123456789</code>)</td></tr>
+            <tr><td><code>display_name</code></td><td>Nama tampilan (bebas, untuk memudahkanmu)</td></tr>
+            <tr><td><code>can_request</code></td><td><code>TRUE</code> jika boleh meminta dokumen</td></tr>
+            <tr><td><code>is_finance</code></td><td><code>TRUE</code> jika boleh menyetujui / menolak dokumen</td></tr>
+            <tr><td><code>is_super_admin</code></td><td><code>TRUE</code> untuk admin penuh (boleh menyetujui walau bukan finance). Isi hanya jika perlu.</td></tr>
+            <tr><td><code>active</code></td><td><code>TRUE</code> agar orang ini aktif</td></tr>
+            <tr><td><code>notes</code></td><td>Catatan bebas</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Menonaktifkan seseorang</strong>
+          <p style="margin:6px 0 0">Jangan hapus barisnya — cukup ubah <code>active</code> jadi <code>FALSE</code>. Nanti kalau dibutuhkan lagi tinggal <code>TRUE</code> kembali.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Nomor tidak boleh dobel</strong>
+          <p style="margin:6px 0 0">Jangan ada dua baris <em>aktif</em> dengan nomor yang sama. Kalau dobel, bot menolak pengaturan baru dan tetap memakai yang lama. Perbaiki dulu duplikatnya.</p>
+        </div>
+        <p class="muted">Orang bisa mengecek izinnya sendiri dengan mengetik <kbd>!check</kbd> di WhatsApp — bot akan membalas apa saja yang boleh ia lakukan.</p>`
+    },
+    {
+      id:"sender", nav:"Dari mana", title:"4. Dari mana bot boleh dipakai (config_sender)", type:"html",
+      html:`
+        <p>Tab ini mengatur <strong>tempat</strong> bot boleh dipakai. Isinya berupa baris <code>setting</code> + <code>value</code>:</p>
+        <table>
+          <thead><tr><th>setting</th><th>value</th><th>Artinya</th></tr></thead>
+          <tbody>
+            <tr><td><code>require_group_only</code></td><td><code>TRUE</code> / <code>FALSE</code></td><td><code>TRUE</code> = bot hanya menanggapi di grup, bukan chat pribadi</td></tr>
+            <tr><td><code>allowed_group_id</code></td><td>ID grup</td><td>Grup yang diizinkan (boleh beberapa baris)</td></tr>
+            <tr><td><code>allowed_chat_id</code></td><td>ID chat</td><td>Chat yang diizinkan (boleh beberapa baris)</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand)">
+          <strong>ID grup/chat dari mana?</strong>
+          <p style="margin:6px 0 0">ID grup/chat tidak bisa dilihat langsung dari WhatsApp — butuh alat bantu terpisah. Sistem WhatsApp yang dipakai bot (GOWA) punya halaman web untuk melihat daftar grup beserta ID-nya. Kalau kamu perlu menambah grup baru dan tidak tahu ID-nya, <strong>minta ke teknisi</strong>.</p>
+        </div>
+        <p class="muted">Tanpa pengaturan, bot berlaku "hanya grup" secara default demi keamanan.</p>`
+    },
+    {
+      id:"companies", nav:"Perusahaan", title:"5. Daftar perusahaan & penomoran (config_companies)", type:"html",
+      html:`
+        <p>Satu baris = satu perusahaan. Ini menentukan perusahaan apa saja yang dilayani bot, nomor dokumennya, dan spreadsheet penyimpanannya.</p>
+        <table>
+          <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
+          <tbody>
+            <tr><td><code>company</code></td><td>Kode singkat perusahaan, huruf besar (mis. <code>WBM</code>). Muncul di akhir nomor dokumen &amp; nama tab.</td></tr>
+            <tr><td><code>company_code</code></td><td>Kode angka penomoran (lihat tabel di bawah)</td></tr>
+            <tr><td><code>spreadsheet_id</code></td><td>Spreadsheet tempat data perusahaan ini disimpan (dari teknisi)</td></tr>
+            <tr><td><code>active</code></td><td><code>TRUE</code> agar perusahaan ini aktif</td></tr>
+            <tr><td><code>notes</code></td><td>Catatan bebas</td></tr>
+          </tbody>
+        </table>
+        <p>Kode angka penomoran (<code>company_code</code>) yang dipakai saat ini:</p>
+        <table>
+          <thead><tr><th>company</th><th>company_code</th></tr></thead>
+          <tbody>
+            <tr><td><code>WBN</code></td><td>18</td></tr>
+            <tr><td><code>WBD</code></td><td>71</td></tr>
+            <tr><td><code>WBM</code></td><td>21</td></tr>
+            <tr><td><code>WBJ</code></td><td>19</td></tr>
+            <tr><td><code>WBK</code></td><td>31</td></tr>
+            <tr><td><code>WBB</code></td><td>30</td></tr>
+          </tbody>
+        </table>
+        <p class="muted">Angka <code>company_code</code> diambil dari tab ini apa adanya — kalau dikosongkan, bot pakai kode bawaan. Untuk perusahaan baru, minta angka yang benar ke teknisi.</p>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Contoh nomor dokumen</strong>
+          <p style="margin:6px 0 0">Untuk WBM, nomor invoice terbentuk seperti <code>INV-2521001.WBM.CRM</code> — angka <code>21</code> di dalamnya berasal dari <code>company_code</code>, dan <code>WBM</code> di akhir berasal dari <code>company</code>.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Kolom teknis lain</strong>
+          <p style="margin:6px 0 0">Ada juga kolom nama-nama tab (mis. <code>request_log</code>, <code>master_inv</code>) dan <code>credentials_file</code>. <strong>Biarkan default / kosong</strong> kecuali teknisi meminta mengubahnya. Nama perusahaan tidak boleh dobel di dua baris aktif.</p>
+        </div>`
+    },
+    {
+      id:"locations", nav:"Cabang & alamat", title:"6. Cabang & alamat (config_locations)", type:"html",
+      html:`
+        <p>Menerjemahkan kata cabang yang diketik user menjadi <strong>alamat lengkap</strong> yang tercetak di dokumen. Satu baris = satu cabang.</p>
+        <table>
+          <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
+          <tbody>
+            <tr><td><code>branch</code></td><td>Kata kunci cabang (mis. <code>WEST</code>, <code>NORTH</code>, atau <code>DEFAULT</code> untuk cadangan)</td></tr>
+            <tr><td><code>location</code></td><td>Alamat lengkap yang mau ditampilkan</td></tr>
+            <tr><td><code>active</code></td><td><code>TRUE</code> agar dipakai</td></tr>
+            <tr><td><code>notes</code></td><td>Catatan bebas</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Tips</strong>
+          <p style="margin:6px 0 0">Pakai kata kunci yang sama persis dengan yang biasa diketik user. Kata cabang yang sama tidak boleh muncul di dua baris aktif.</p>
+        </div>`
+    },
+    {
+      id:"staff", nav:"Staf & rekening", title:"7. Staf & rekening (config_staff)", type:"html",
+      html:`
+        <p>Menentukan siapa yang di-<em>mention</em> (ditandai) saat sebuah rekening dipakai. Satu baris = satu rekening/staf.</p>
+        <table>
+          <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>Penanda rekening / baris <code>REK</code> (huruf besar)</td></tr>
+            <tr><td><code>name</code></td><td>Nama staf</td></tr>
+            <tr><td><code>phone</code></td><td>Nomor WhatsApp staf yang akan ditandai</td></tr>
+            <tr><td><code>active</code></td><td><code>TRUE</code> agar dipakai</td></tr>
+            <tr><td><code>notes</code></td><td>Catatan bebas</td></tr>
+          </tbody>
+        </table>
+        <p class="muted">Penanda <code>id</code> yang sama tidak boleh dobel di dua baris aktif.</p>`
+    },
+    {
+      id:"settings", nav:"Pengaturan umum", title:"8. Pengaturan umum (config_settings)", type:"html",
+      html:`
+        <p>Aturan umum berupa pasangan <code>key</code> + <code>value</code>. Dua yang paling sering kamu ubah:</p>
+        <table>
+          <thead><tr><th>key</th><th>value</th><th>Artinya</th></tr></thead>
+          <tbody>
+            <tr><td><code>reminder_interval_min</code></td><td>angka menit</td><td>Seberapa sering bot mengingatkan dokumen yang menunggu keputusan</td></tr>
+            <tr><td><code>revision_max_age_days</code></td><td>angka hari</td><td>Batas usia dokumen yang masih boleh direvisi</td></tr>
+            <tr><td><code>pdf_compression_profile</code></td><td><code>prepress</code> / <code>printer</code> / <code>ebook</code> / <code>screen</code></td><td>Mutu vs ukuran file PDF</td></tr>
+            <tr><td><code>pdf_compression_enabled</code></td><td><code>TRUE</code> / <code>FALSE</code></td><td><code>TRUE</code> = perkecil ukuran file PDF</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Memilih mutu PDF (<code>pdf_compression_profile</code>)</strong>
+          <p style="margin:6px 0 0">Pakai <code>prepress</code> untuk logo paling tajam. Kalau file terlalu besar, turunkan ke <code>printer</code>. Hindari <code>screen</code> untuk PDF yang dikirim ke pelanggan (paling buram).</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--accent)">
+          <strong>Harus angka, dan lebih dari 0</strong>
+          <p style="margin:6px 0 0">Kedua nilai di atas harus berupa angka bulat positif. Kalau diisi salah (mis. kosong atau huruf), bot menolak pengaturan baru dan tetap memakai yang lama.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--brand)">
+          <strong>Nama-nama tab</strong>
+          <p style="margin:6px 0 0">Tab ini juga bisa menimpa nama tab log/master. <strong>Jangan diubah</strong> kecuali teknisi memintanya.</p>
+        </div>`
+    },
+    {
+      id:"katalog", nav:"Katalog barang", title:"9. Katalog barang", type:"html",
+      html:`
+        <p>Daftar kode &amp; nama barang ada di tab <code>DATABASE</code>, dan sudah punya panduan sendiri. Tidak diulang di sini.</p>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Buka panduannya</strong>
+          <p style="margin:6px 0 0">Lihat <a href="panduan-pengisian-database.html">Panduan Database</a> untuk cara mengisi kode produk.</p>
+        </div>`
+    },
+    {
+      id:"aturan", nav:"Aturan emas", title:"10. Aturan emas & kesalahan umum", type:"html",
+      html:`
+        <div class="grid2">
+          <div class="card" style="border-left:4px solid var(--brand-2)">
+            <strong>✓ Lakukan</strong>
+            <p style="margin:6px 0 0">Selalu isi kolom <code>active</code>. Untuk mematikan sesuatu, ubah ke <code>FALSE</code> — jangan hapus barisnya.</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--brand-2)">
+            <strong>✓ Lakukan</strong>
+            <p style="margin:6px 0 0">Sebelum mengubah banyak baris, salin dulu tab-nya sebagai cadangan (klik kanan tab → Duplicate).</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--brand-2)">
+            <strong>✓ Lakukan</strong>
+            <p style="margin:6px 0 0">Pastikan hanya ada <strong>satu baris aktif</strong> per nomor orang / nama perusahaan / kunci / cabang.</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--accent)">
+            <strong>✕ Hindari</strong>
+            <p style="margin:6px 0 0">Mengubah atau menghapus <strong>baris judul (header)</strong> paling atas tiap tab. Nama kolom harus tetap.</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--accent)">
+            <strong>✕ Hindari</strong>
+            <p style="margin:6px 0 0">Mengedit tab buatan bot (<code>request_log</code>, <code>decision_log</code>, <code>counter_global</code>, <code>QUO</code>/<code>INV</code>/<code>RCP</code>).</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--accent)">
+            <strong>✕ Hindari</strong>
+            <p style="margin:6px 0 0">Membuat dua baris aktif yang sama (dobel). Bot akan menolak seluruh pengaturan baru sampai diperbaiki.</p>
+          </div>
+        </div>`
+    },
+    {
+      id:"cek", nav:"Cek cepat", title:"11. Kalau ada yang aneh — cek cepat", type:"html",
+      html:`
+        <table>
+          <thead><tr><th>Gejala</th><th>Coba periksa</th></tr></thead>
+          <tbody>
+            <tr><td>Seseorang tidak bisa pakai bot</td><td>Baris orang itu di <code>config_roles</code> <code>active=TRUE</code>? <code>can_request</code> sesuai? Nomor benar &amp; tidak dobel?</td></tr>
+            <tr><td>Bot diam di grup tertentu</td><td>Grup itu terdaftar di <code>config_sender</code> (<code>allowed_group_id</code>)? <code>require_group_only</code> sesuai?</td></tr>
+            <tr><td>Nomor dokumen salah</td><td><code>company</code> &amp; <code>company_code</code> di <code>config_companies</code> benar?</td></tr>
+            <tr><td>Alamat cabang tidak muncul</td><td>Kata cabang cocok dengan <code>branch</code> di <code>config_locations</code>?</td></tr>
+            <tr><td>Pengaturan baru tidak terpakai</td><td>Ada baris dobel atau nilai salah (mis. bukan angka)? Bot menolak dan memakai yang lama — perbaiki lalu tunggu sebentar.</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="border-left:4px solid var(--brand-2)">
+          <strong>Uji akses cepat</strong>
+          <p style="margin:6px 0 0">Minta orang yang bermasalah mengetik <kbd>!check</kbd> di WhatsApp. Balasannya menunjukkan izin yang bot lihat untuk orang itu — cara tercepat memastikan <code>config_roles</code> sudah benar.</p>
+        </div>
+        <p class="muted">Kalau masalahnya di luar tab <code>config_</code> (bot mati total, tidak terhubung WhatsApp, file tidak tersimpan), hubungi teknisi.</p>`
+    },
+  ],
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="docs-engine.js"></script>
+</body>
+</html>
