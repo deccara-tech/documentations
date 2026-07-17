@@ -8,14 +8,14 @@
 <body>
 <script>
 /* =====================================================================
-   PANDUAN ADMIN SISTEM — untuk orang yang merawat bot audit lewat tab
+   PANDUAN DBO SUPERVISOR (ADMIN) — untuk orang yang merawat bot audit lewat tab
    pengaturan di spreadsheet (config_*). Non-teknis, tanpa istilah IT.
    Edit hanya DOCS_DATA. Template = docs-styles.css + docs-engine.js
    (dipakai bersama, jangan diubah).
    ===================================================================== */
 window.DOCS_DATA = {
   project: "Audit Bot",
-  audience: "Panduan Admin Sistem",
+  audience: "Panduan DBO Supervisor (Admin)",
   tagline: "Cara mengatur bot audit lewat tab pengaturan di spreadsheet (config_*): siapa yang boleh pakai, dari mana, daftar orang & divisi, tujuan pengingat, dan katalog kategori audit. Semua tanpa menyentuh program.",
   repo: "https://github.com/deccara-tech/bot-auditing",
   fallbackVersion: "v0.1.0",
@@ -136,7 +136,7 @@ window.DOCS_DATA = {
             <tr><td><code>can_audit_review</code></td><td><code>TRUE</code> jika boleh me-review/konfirmasi</td></tr>
             <tr><td><code>can_audit_cancel</code></td><td><code>TRUE</code> jika boleh membatalkan Audit Case</td></tr>
             <tr><td><code>can_receive_audit_reminder</code></td><td><code>TRUE</code> jika ikut menerima pengingat</td></tr>
-            <tr><td><code>is_super_admin</code></td><td><code>TRUE</code> untuk admin penuh — <strong>otomatis dapat keempat izin di atas</strong>. Isi hanya jika perlu.</td></tr>
+            <tr><td><code>is_super_admin</code></td><td><code>TRUE</code> untuk DBO Supervisor (Admin) dengan akses penuh — <strong>otomatis dapat keempat izin di atas</strong>. Isi hanya jika perlu.</td></tr>
             <tr><td><code>notes</code></td><td>Catatan bebas</td></tr>
           </tbody>
         </table>
