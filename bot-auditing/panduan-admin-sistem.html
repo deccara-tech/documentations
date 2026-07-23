@@ -120,7 +120,7 @@ window.DOCS_DATA = {
     {
       id:"targets", nav:"Daftar orang & izin", title:"5. Daftar orang & izin (config_audited_targets)", type:"html",
       html:`
-        <p>Satu baris = satu orang. Ini menentukan siapa yang diaudit, izinnya, dan ke mana pengingat dikirim. Untuk menambah orang, tambahkan satu baris:</p>
+        <p>Satu baris = satu target audit dengan <code>code</code> resmi yang unik. Ini menentukan siapa yang diaudit, izinnya, dan ke mana pengingat dikirim. Untuk menambah target, tambahkan satu baris:</p>
         <table>
           <thead><tr><th>Kolom</th><th>Isi</th></tr></thead>
           <tbody>
@@ -145,8 +145,8 @@ window.DOCS_DATA = {
           <p style="margin:6px 0 0">Jangan hapus barisnya — cukup ubah <code>active</code> jadi <code>FALSE</code>. Nanti kalau dibutuhkan lagi tinggal <code>TRUE</code> kembali.</p>
         </div>
         <div class="card" style="border-left:4px solid var(--accent)">
-          <strong>Nomor &amp; kode tidak boleh dobel</strong>
-          <p style="margin:6px 0 0">Jangan ada dua baris <em>aktif</em> dengan nomor yang sama, atau dua baris aktif dengan <code>code</code> yang sama. Kalau dobel, bot menolak pengaturan baru dan tetap memakai yang lama.</p>
+          <strong>Kode harus unik; nomor boleh dipakai bersama</strong>
+          <p style="margin:6px 0 0">Jangan ada dua baris <em>aktif</em> dengan <code>code</code> yang sama. Nomor <code>phone</code> boleh sama untuk beberapa kode. Jika nomor dipakai bersama, izin dari semua baris aktif digabung dan form harus memakai <code>code</code> resmi agar target tidak ambigu.</p>
         </div>
         <div class="card" style="border-left:4px solid var(--brand)">
           <strong>Minimal satu orang untuk tiap izin</strong>
@@ -241,7 +241,7 @@ window.DOCS_DATA = {
           </div>
           <div class="card" style="border-left:4px solid var(--brand-2)">
             <strong>✓ Lakukan</strong>
-            <p style="margin:6px 0 0">Pastikan hanya ada <strong>satu baris aktif</strong> per nomor/kode orang, kunci pengaturan, divisi, atau kategori.</p>
+            <p style="margin:6px 0 0">Pastikan setiap <code>code</code> target hanya punya <strong>satu baris aktif</strong>. Nomor boleh dipakai beberapa kode; kunci pengaturan, divisi, dan kategori tetap tidak boleh dobel.</p>
           </div>
           <div class="card" style="border-left:4px solid var(--accent)">
             <strong>✕ Hindari</strong>
@@ -253,7 +253,7 @@ window.DOCS_DATA = {
           </div>
           <div class="card" style="border-left:4px solid var(--accent)">
             <strong>✕ Hindari</strong>
-            <p style="margin:6px 0 0">Membuat dua baris aktif yang sama (dobel). Bot akan menolak seluruh pengaturan baru sampai diperbaiki.</p>
+            <p style="margin:6px 0 0">Membuat dua baris aktif dengan <code>code</code> yang sama. Nomor <code>phone</code> boleh sama, tetapi kode resmi tetap harus berbeda.</p>
           </div>
         </div>`
     },
@@ -263,7 +263,7 @@ window.DOCS_DATA = {
         <table>
           <thead><tr><th>Gejala</th><th>Coba periksa</th></tr></thead>
           <tbody>
-            <tr><td>Seseorang tidak bisa pakai bot</td><td>Baris orang itu di <code>config_audited_targets</code> <code>active=TRUE</code>? Izin (<code>can_audit_*</code>) sesuai? Nomor benar &amp; tidak dobel?</td></tr>
+            <tr><td>Seseorang tidak bisa pakai bot</td><td>Baris orang itu di <code>config_audited_targets</code> <code>active=TRUE</code>? Izin (<code>can_audit_*</code>) sesuai? Nomor benar? Jika nomor dipakai beberapa target, form sudah memakai <code>code</code> resmi?</td></tr>
             <tr><td>Bot diam di grup tertentu</td><td>Grup itu terdaftar di <code>config_sender</code> (<code>allowed_group_id</code>)? <code>require_group_only</code> sesuai?</td></tr>
             <tr><td>Pengingat tidak sampai</td><td><code>config_reminder_routes</code>: <code>target_code</code> cocok &amp; aktif? <code>chat_id</code> benar? <code>status</code> valid?</td></tr>
             <tr><td>Kategori audit ditolak</td><td>Kategori ada di <code>AUDIT LIST</code> untuk divisi itu? <code>SCORING METHOD</code> = <code>CODE</code>/<code>FINDING</code>?</td></tr>
