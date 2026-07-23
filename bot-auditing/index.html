@@ -45,7 +45,7 @@ window.DOCS_DATA = {
         <h3>Alur singkat</h3>
         <ol class="steps">
           <li><b>Auditor kirim FORM AUDIT.</b> Bot membuat Audit Case dan memberi <code>REF_AUDIT</code>.</li>
-          <li><b>Yang diaudit menindaklanjuti.</b> Tergantung kategori: <b>FORM PERBAIKAN</b> jika temuan bisa diperbaiki, atau <b>FORM CONFIRMED</b> jika hanya perlu konfirmasi. Keduanya di-reply ke pesan audit.</li>
+          <li><b>Yang diaudit menindaklanjuti.</b> Tergantung kategori: <b>CORRECTION FORM</b> jika temuan bisa diperbaiki, atau <b>FORM CONFIRMED</b> jika hanya perlu konfirmasi. Keduanya di-reply ke pesan audit.</li>
           <li><b>Reminder otomatis.</b> Selama masih pending, bot mengingatkan tiap hari jam 12:00 (lewati Minggu &amp; hari libur).</li>
         </ol>`
     },
@@ -59,7 +59,7 @@ window.DOCS_DATA = {
   C --> D{Kategori bisa diperbaiki?}
   D -->|Ya| E[Status perbaikan_required]
   D -->|Tidak| F[Status confirmed_required]
-  E --> G[Audited reply FORM PERBAIKAN] --> H[Status perbaikan_submitted]
+  E --> G[Audited reply CORRECTION FORM] --> H[Status perbaikan_submitted]
   F --> I[Audited reply FORM CONFIRMED] --> J[Status confirmed - selesai]
   C --> K{Perlu batal?}
   K -->|Superior atau auditor| L[FORM CANCEL AUDIT] --> M[Status cancelled]` },
@@ -80,7 +80,7 @@ window.DOCS_DATA = {
         },
         {
           title:"Buat Audit Case (FORM AUDIT)",
-          note:"Isi form dan kirim. Bot membalas dengan REF_AUDIT lalu template langkah lanjutan.",
+          note:"Isi form dan kirim. Alternatif trigger: AUDIT OPERATIONAL FORM. Untuk audit sales: AUDIT SALES FORM atau FORM AUDIT SALES (wajib foto dan mention/CC auditor). Semua trigger boleh diawali !. Bot membalas dengan REF_AUDIT lalu template langkah lanjutan.",
           steps:[
             {from:"user", text:"FORM AUDIT\nAUDITED: CR001\nCATEGORY: OPS\nCODE: C-102\nAUDITOR: AUD9\nNOTES: rak display tidak rapi"},
             {typing:1400},
@@ -88,22 +88,22 @@ window.DOCS_DATA = {
           ]
         },
         {
-          title:"Kirim perbaikan (FORM PERBAIKAN)",
-          note:"Reply pesan audit sebelumnya. Hanya nomor yang diaudit yang boleh mengirim. Bot mencatat tanpa balasan; status berubah ke perbaikan_submitted.",
+          title:"Kirim perbaikan (CORRECTION FORM)",
+          note:"Reply pesan audit sebelumnya. Alternatif trigger: FORM PERBAIKAN, AUDIT DATA CORRECTION FORM, atau CORRECTION; semuanya boleh diawali !. Hanya nomor yang diaudit yang boleh mengirim. Bot mencatat tanpa balasan; status berubah ke perbaikan_submitted.",
           steps:[
-            {from:"user", quote:"REF_AUDIT: AUD-2604-CR-0011", text:"FORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
+            {from:"user", quote:"REF_AUDIT: AUD-2604-CR-0011", text:"CORRECTION FORM\nREF_AUDIT: AUD-2604-CR-0011"},
           ]
         },
         {
           title:"Konfirmasi selesai (FORM CONFIRMED)",
-          note:"Reply pesan audit lagi untuk menutup temuan. Bot mencatat tanpa balasan; status berubah ke confirmed.",
+          note:"Reply pesan audit lagi untuk menutup temuan. Alternatif trigger: AUDIT CONFIRMED FORM, CONFIRMATION FORM, atau CONFIRMATION; semuanya boleh diawali !. Bot mencatat tanpa balasan; status berubah ke confirmed.",
           steps:[
             {from:"user", quote:"REF_AUDIT: AUD-2604-CR-0011", text:"FORM CONFIRMED\nREF_AUDIT: AUD-2604-CR-0011"},
           ]
         },
         {
           title:"Batalkan audit (FORM CANCEL AUDIT)",
-          note:"Hanya superior yang diaudit atau auditor yang boleh. Semua field harus cocok dengan REF_AUDIT.",
+          note:"Alternatif trigger: AUDIT CANCELLATION FORM; kedua trigger boleh diawali !. Hanya superior yang diaudit atau auditor yang boleh. Semua field harus cocok dengan REF_AUDIT.",
           steps:[
             {from:"user", text:"FORM CANCEL AUDIT\nREF_AUDIT: AUD-2604-CR-0011\nAUDITED: CR001\nCATEGORY: OPS\nCODE: C-102\nAPPROVED BY: SPVCR001\nCANCELLATION REASON: duplikat"},
             {typing:1200},
@@ -132,7 +132,7 @@ window.DOCS_DATA = {
           title:"“Wajib reply pesan audit”",
           note:"Perbaikan & konfirmasi harus dikirim sebagai reply ke pesan audit sebelumnya.",
           steps:[
-            {from:"user", text:"FORM PERBAIKAN\nREF_AUDIT: AUD-2604-CR-0011"},
+            {from:"user", text:"CORRECTION FORM\nREF_AUDIT: AUD-2604-CR-0011"},
             {typing:900},
             {from:"bot", text:"❗ WARNING ❗\n\nThe correction form must be submitted as a reply to the previous audit message (quoted block is required)."},
           ]
@@ -151,12 +151,15 @@ AUDITOR: &lt;kode auditor&gt;
 CODE: &lt;kode/klien, opsional&gt;
 NOTES: &lt;catatan, opsional&gt;
 CC: &lt;@mention tambahan, opsional&gt;</pre>
-        <h3>FORM PERBAIKAN &amp; FORM CONFIRMED (reply pesan audit)</h3>
-        <pre>FORM PERBAIKAN
+        <p><b>Alternatif trigger audit:</b> <code>AUDIT OPERATIONAL FORM</code>. Untuk audit sales, gunakan <code>AUDIT SALES FORM</code> atau <code>FORM AUDIT SALES</code> (wajib foto dan mention/CC auditor). Semua trigger, termasuk <code>FORM AUDIT</code>, boleh diawali <code>!</code>.</p>
+        <h3>CORRECTION FORM &amp; FORM CONFIRMED (reply pesan audit)</h3>
+        <pre>CORRECTION FORM
 REF_AUDIT: &lt;REF_AUDIT dari pesan audit&gt;
 
 FORM CONFIRMED
 REF_AUDIT: &lt;REF_AUDIT dari pesan audit&gt;</pre>
+        <p><b>Alternatif trigger perbaikan:</b> <code>FORM PERBAIKAN</code>, <code>AUDIT DATA CORRECTION FORM</code>, atau <code>CORRECTION</code>. Semua trigger, termasuk <code>CORRECTION FORM</code>, boleh diawali <code>!</code>.</p>
+        <p><b>Alternatif trigger konfirmasi:</b> <code>AUDIT CONFIRMED FORM</code>, <code>CONFIRMATION FORM</code>, atau <code>CONFIRMATION</code>. Semua trigger, termasuk <code>FORM CONFIRMED</code>, boleh diawali <code>!</code>.</p>
         <h3>FORM CANCEL AUDIT (batalkan)</h3>
         <pre>FORM CANCEL AUDIT
 REF_AUDIT: &lt;REF_AUDIT&gt;
@@ -165,6 +168,7 @@ CATEGORY: &lt;kategori&gt;
 CODE: &lt;kode&gt;
 APPROVED BY: &lt;siapa yang menyetujui&gt;
 CANCELLATION REASON: &lt;alasan&gt;</pre>
+        <p><b>Alternatif trigger pembatalan:</b> <code>AUDIT CANCELLATION FORM</code>. Kedua trigger boleh diawali <code>!</code>.</p>
         <div class="grid2">
           <details open><summary>Apa itu REF_AUDIT?</summary>
             <p>Nomor unik Audit Case, format <code>AUD-2604-CR-0011</code>. Bot yang membuatnya —
@@ -179,10 +183,10 @@ CANCELLATION REASON: &lt;alasan&gt;</pre>
       columns:["Ketik ini","Kapan dipakai","Yang bot lakukan"],
       rows:[
         {"Ketik ini":"!check", "Kapan dipakai":"Lihat izin kamu", "Yang bot lakukan":"Tampilkan nama dan akses."},
-        {"Ketik ini":"FORM AUDIT", "Kapan dipakai":"Buat temuan baru", "Yang bot lakukan":"Buat Audit Case + beri REF_AUDIT."},
-        {"Ketik ini":"FORM PERBAIKAN", "Kapan dipakai":"Reply untuk kirim perbaikan", "Yang bot lakukan":"Status jadi perbaikan_submitted."},
-        {"Ketik ini":"FORM CONFIRMED", "Kapan dipakai":"Reply untuk tutup temuan", "Yang bot lakukan":"Status jadi confirmed."},
-        {"Ketik ini":"FORM CANCEL AUDIT", "Kapan dipakai":"Batalkan (superior/auditor)", "Yang bot lakukan":"Status jadi cancelled."},
+        {"Ketik ini":"FORM AUDIT", "Kapan dipakai":"Buat temuan baru. Alternatif: AUDIT OPERATIONAL FORM. Sales: AUDIT SALES FORM, FORM AUDIT SALES. Boleh diawali !", "Yang bot lakukan":"Buat Audit Case + beri REF_AUDIT."},
+        {"Ketik ini":"CORRECTION FORM", "Kapan dipakai":"Reply untuk kirim perbaikan. Alternatif: FORM PERBAIKAN, AUDIT DATA CORRECTION FORM, CORRECTION. Boleh diawali !", "Yang bot lakukan":"Status jadi perbaikan_submitted."},
+        {"Ketik ini":"FORM CONFIRMED", "Kapan dipakai":"Reply untuk tutup temuan. Alternatif: AUDIT CONFIRMED FORM, CONFIRMATION FORM, CONFIRMATION. Boleh diawali !", "Yang bot lakukan":"Status jadi confirmed."},
+        {"Ketik ini":"FORM CANCEL AUDIT", "Kapan dipakai":"Batalkan (superior/auditor). Alternatif: AUDIT CANCELLATION FORM. Boleh diawali !", "Yang bot lakukan":"Status jadi cancelled."},
       ]
     },
     {
